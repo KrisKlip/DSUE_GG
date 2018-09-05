@@ -8,7 +8,7 @@ public class DroneSimulatorTarget : TargetRules
 	public DroneSimulatorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-
-		ExtraModuleNames.AddRange( new string[] { "DroneSimulator" } );
+        bUsesSteam = true;
+        ExtraModuleNames.AddRange( new string[] { "DroneSimulator" } );
 	}
 }

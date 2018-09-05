@@ -24,6 +24,27 @@
 			"Name": "UINavigation",
 			"Enabled": false,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/4601ff4d12fc4ed1a7418e1585374a48"
+		},
+		{
+			"Name": "WebBrowserWidget",
+			"Enabled": true
+		},
+		{
+			"Name": "LoadingScreen",
+			"Enabled": true
+		},
+		{
+			"Name": "Ping",
+			"Enabled": true
+		},
+		{
+			"Name": "GamepadUMGPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "VictoryBPLibrary",
+			"Enabled": true,
+			"MarketplaceURL": "http://www.ue4code.com"
 		}
 	]
 }
