@@ -9,6 +9,6 @@ public class DroneSimulatorEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 
-		ExtraModuleNames.AddRange( new string[] { "DroneSimulator" } );
-	}
+		ExtraModuleNames.Add("DroneSimulator");
+    }
 }
