@@ -4,6 +4,8 @@
 #include "Modules/ModuleManager.h"
 #include "IInputDeviceModule.h"
 
+class FDroneController;
+
 /**
  * The public interface to this module.  In most cases, this interface is only public to sibling modules 
  * within this plugin.
@@ -12,6 +14,8 @@ class IDroneControllerModule : public IInputDeviceModule
 {
 
 public:
+	virtual TSharedRef<FDroneController> GetDroneControllerRef() = 0;
+
 
 	/**
 	 * Singleton-like access to this module's interface.  This is just for convenience!

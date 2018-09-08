@@ -7,8 +7,10 @@ DEFINE_LOG_CATEGORY(DroneControllerModule);
 
 TSharedPtr< class IInputDevice > FDroneControllerModule::CreateInputDevice(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler)
 {
-	return TSharedPtr< class IInputDevice >(new FDroneController(InMessageHandler));
+	DroneController = TSharedPtr< class FDroneController >(new FDroneController(InMessageHandler));
+	return DroneController;
 }
+
  
 #undef LOCTEXT_NAMESPACE
  

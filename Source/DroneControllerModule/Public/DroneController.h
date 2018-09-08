@@ -1,20 +1,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HAL/PlatformTime.h"
-#include "HAL/PlatformProcess.h"
-#include "Misc/Paths.h"
-#include "GenericPlatform/GenericApplicationMessageHandler.h"
-#include "Modules/ModuleManager.h"
-#include "GenericPlatform/IInputInterface.h"
 #include "IInputDevice.h"
 #include "IInputDeviceModule.h"
-#include "IDroneControllerModule.h"
-#include "DroneControllerModule.h"
 
 class FDroneController : public IInputDevice
 {
 public:
+	/**
+	* Buttons on the SteamVR controller
+	*/
+	struct EDroneControllerButton
+	{
+		enum Type
+		{
+			Hook,
+
+			/** Max number of controller buttons.  Must be < 256 */
+			TotalButtonCount
+		};
+	};
+
 	FDroneController(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler);
 	virtual ~FDroneController();
 	virtual void Tick( float DeltaTime ) override;
@@ -24,4 +30,17 @@ public:
 	virtual void SetChannelValues(int32 ControllerId, const FForceFeedbackValues &Values) override;
 	virtual bool Exec(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override;
 	virtual bool IsGamepadAttached() const override;
+
+// Bluprint functional libary accessable
+public:
+	bool bIsSendControllerEvents;
+
+private:
+	/** Mapping of controller buttons */
+	FGamepadKeyNames::Type Buttons[1][EDroneControllerButton::TotalButtonCount];
+
+	/** handler to send all messages to */
+	TSharedRef<FGenericApplicationMessageHandler> MessageHandler;
+
+	float DeltaTime;
 };
