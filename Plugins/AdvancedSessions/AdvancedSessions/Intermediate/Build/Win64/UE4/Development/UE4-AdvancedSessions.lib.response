@@ -1,0 +1,8 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+"C:\Users\Kristof\Documents\Unreal Projects\DroneSimulator2\DroneSimulator\Plugins\AdvancedSessions\AdvancedSessions\Intermediate\Build\Win64\UE4\Development\AdvancedSessions\Module.AdvancedSessions.cpp.obj"
+"C:\Users\Kristof\Documents\Unreal Projects\DroneSimulator2\DroneSimulator\Plugins\AdvancedSessions\AdvancedSessions\Intermediate\Build\Win64\UE4\Development\AdvancedSessions\Module.AdvancedSessions.gen.cpp.obj"
+"C:\Users\Kristof\Documents\Unreal Projects\DroneSimulator2\DroneSimulator\Intermediate\Build\Win64\UE4\Development\AdvancedSessions\PCLaunch.rc.res"
+/OUT:"C:\Users\Kristof\Documents\Unreal Projects\DroneSimulator2\DroneSimulator\Plugins\AdvancedSessions\AdvancedSessions\Binaries\Win64\UE4-AdvancedSessions.lib"
