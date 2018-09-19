@@ -32,14 +32,13 @@ public class DroneControllerModule : ModuleRules
 		//The path for the header files
 		PublicIncludePaths.AddRange(new string[] {
             "DroneControllerModule/Public",
-
-            // vld
-            Path.Combine(IncludePath, "vld", "vld.h"),
-            Path.Combine(IncludePath, "vld", "vld_def.h"),
         });
  
 		//The path for the source files
-		PrivateIncludePaths.AddRange(new string[] {"DroneControllerModule/Private"});
+		PrivateIncludePaths.AddRange(new string[] {
+            "DroneControllerModule/Private",
+             Path.Combine(IncludePath, "UE4x360ce")
+        });
 
         LoadLib(Target);
     }
@@ -54,16 +53,11 @@ public class DroneControllerModule : ModuleRules
             string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "Win64" : "Win32";
 
             //  lib
-            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, PlatformString, "xinput", "xinput1_3.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, PlatformString, "vld", "vld.lib"));
-
+            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, PlatformString, "UE4x360ce", "UE4x360ce.lib"));
 
             // Add dll
-            PublicDelayLoadDLLs.Add("xinput1_3.dll");
-            PublicDelayLoadDLLs.Add("vld_x64.dll");
-
-            RuntimeDependencies.Add(Path.Combine(BinariesPath, PlatformString, "xinput", "xinput1_3.dll"));
-            RuntimeDependencies.Add(Path.Combine(BinariesPath, PlatformString, "vld", "vld_x64.dll"));
+            PublicDelayLoadDLLs.Add("UE4x360ce.dll");
+            RuntimeDependencies.Add(Path.Combine(BinariesPath, PlatformString, "UE4x360ce", "UE4x360ce.dll"));
         }
 
         return isLibrarySupported;

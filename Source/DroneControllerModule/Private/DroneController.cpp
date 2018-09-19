@@ -12,6 +12,8 @@
 #include "IDroneControllerModule.h"
 #include "DroneControllerModule.h"
 
+#include "UE4x360ce.h"
+
 #define LOCTEXT_NAMESPACE "DroneController"
 
 
@@ -31,6 +33,7 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	: MessageHandler(InMessageHandler)
 	, bIsSendControllerEvents(false)
 	, DeltaTime(0.f)
+	, ue4x360ce(nullptr)
 {
 	UE_LOG(DroneControllerModule, Warning, TEXT("FDroneController::FDroneController"));
 
@@ -40,33 +43,21 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	FString WinDir = TEXT("Win32/");
 #endif
 
-	void* xinputDLLHandle = nullptr;
-	void* vldDLLHandle = nullptr;
 	FString RootXInputPath = FPaths::ProjectDir() / FString::Printf(TEXT("Source/DroneControllerModule/Binaries/")) / WinDir;
 
 	FPlatformProcess::PushDllDirectory(*RootXInputPath);
-	vldDLLHandle = FPlatformProcess::GetDllHandle(*(RootXInputPath + "vld/vld_x64.dll"));
-	xinputDLLHandle = FPlatformProcess::GetDllHandle(*(RootXInputPath + "xinput/xinput1_3.dll"));
+	UE4x360ceHandle = FPlatformProcess::GetDllHandle(*(RootXInputPath + "UE4x360ce/UE4x360ce.dll"));
 	FPlatformProcess::PopDllDirectory(*RootXInputPath);
 
-	if (!vldDLLHandle)
+
+	if (!UE4x360ceHandle)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load vld library."));
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load UE4x360ce library."));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Success to load vld library."));
+		UE_LOG(LogTemp, Warning, TEXT("Success to load UE4x360ce library."));
 	}
-
-	if (!xinputDLLHandle)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load xinput1_3 library."));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Success to load xinput1_3 library."));
-	}
-
 
 	EKeys::AddMenuCategoryDisplayInfo("DroneController", LOCTEXT("DroneControllerSubCateogry", "DroneController"), TEXT("GraphEditor.PadEvent_16x"));
 
@@ -78,11 +69,22 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 
 	// Float axis
 	EKeys::AddKey(FKeyDetails(DroneControllerKeys::DroneController_Stick_Left_X, LOCTEXT("DroneController_Stick_Left_X", "DroneController Left Stick X"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
+
+	ue4x360ce = new UE4x360ce();
+
+	ue4x360ce->Run();
 }
 
 FDroneController::~FDroneController()
 {
-	//UE_LOG(DroneControllerModule, Warning, TEXT("FDroneController::~FDroneController"));
+	if (UE4x360ceHandle)
+	{
+		FPlatformProcess::FreeDllHandle(UE4x360ceHandle);
+		UE4x360ceHandle = nullptr;
+	}
+
+	delete ue4x360ce;
+	ue4x360ce = nullptr;
 }
 
 void FDroneController::Tick(float DeltaTime)
@@ -92,6 +94,7 @@ void FDroneController::Tick(float DeltaTime)
 
 void FDroneController::SendControllerEvents()
 {
+	UE_LOG(DroneControllerModule, Warning, TEXT("ue4x360ce->GetDeviceNum %d"), ue4x360ce->ue4x360ceFrame.ControllersCount);
 	// Just for Debugging
 	{
 		MessageHandler->OnControllerAnalog(DroneControllerKeyNames::DroneController_Stick_Left_X, 0, 0.f);

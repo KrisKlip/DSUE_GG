@@ -4,6 +4,8 @@
 #include "IInputDevice.h"
 #include "IInputDeviceModule.h"
 
+class UE4x360ce;
+
 class FDroneController : public IInputDevice
 {
 public:
@@ -43,4 +45,8 @@ private:
 	TSharedRef<FGenericApplicationMessageHandler> MessageHandler;
 
 	float DeltaTime;
+
+private:
+	UE4x360ce* ue4x360ce;
+	void* UE4x360ceHandle = nullptr;
 };
