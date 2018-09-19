@@ -2,6 +2,7 @@
  
 #include "IDroneControllerModule.h"
 
+
 class FDroneController;
  
 DECLARE_LOG_CATEGORY_EXTERN(DroneControllerModule, All, All);
@@ -15,7 +16,6 @@ public:
 private:
 	virtual TSharedPtr< class IInputDevice > CreateInputDevice(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler) override;
 
-	
 private:
 	TSharedPtr<FDroneController> DroneController = nullptr;
 };

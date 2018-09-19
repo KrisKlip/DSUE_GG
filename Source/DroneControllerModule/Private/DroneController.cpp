@@ -7,6 +7,7 @@
 #include "Modules/ModuleManager.h"
 #include "GenericPlatform/IInputInterface.h"
 #include "Engine.h"
+#include "HAL/PlatformProcess.h"
 
 #include "IDroneControllerModule.h"
 #include "DroneControllerModule.h"
@@ -32,6 +33,39 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	, DeltaTime(0.f)
 {
 	UE_LOG(DroneControllerModule, Warning, TEXT("FDroneController::FDroneController"));
+
+#if PLATFORM_64BITS
+	FString WinDir = TEXT("Win64/");
+#else
+	FString WinDir = TEXT("Win32/");
+#endif
+
+	void* xinputDLLHandle = nullptr;
+	void* vldDLLHandle = nullptr;
+	FString RootXInputPath = FPaths::ProjectDir() / FString::Printf(TEXT("Source/DroneControllerModule/Binaries/")) / WinDir;
+
+	FPlatformProcess::PushDllDirectory(*RootXInputPath);
+	vldDLLHandle = FPlatformProcess::GetDllHandle(*(RootXInputPath + "vld/vld_x64.dll"));
+	xinputDLLHandle = FPlatformProcess::GetDllHandle(*(RootXInputPath + "xinput/xinput1_3.dll"));
+	FPlatformProcess::PopDllDirectory(*RootXInputPath);
+
+	if (!vldDLLHandle)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load vld library."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Success to load vld library."));
+	}
+
+	if (!xinputDLLHandle)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load xinput1_3 library."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Success to load xinput1_3 library."));
+	}
 
 
 	EKeys::AddMenuCategoryDisplayInfo("DroneController", LOCTEXT("DroneControllerSubCateogry", "DroneController"), TEXT("GraphEditor.PadEvent_16x"));
