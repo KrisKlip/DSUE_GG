@@ -5,7 +5,14 @@
   D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.map
   D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.pdb
           6 file(s) copied.
+  Controller.cpp
+  Generating Code...
+  Compiling...
   UE4x360ce.cpp
   c:\program files (x86)\windows kits\8.1\include\um\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  ForceFeedback.cpp
+  ControllerCombiner.cpp
+  ControllerBase.cpp
+  Generating Code...
   UE4x360ce.vcxproj -> D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.dll
   UE4x360ce.vcxproj -> D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.pdb (Full PDB)
