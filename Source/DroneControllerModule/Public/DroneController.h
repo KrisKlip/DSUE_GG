@@ -4,7 +4,7 @@
 #include "IInputDevice.h"
 #include "IInputDeviceModule.h"
 
-class UE4x360ce;
+class FDroneControllerDI;
 
 class FDroneController : public IInputDevice
 {
@@ -47,6 +47,6 @@ private:
 	float DeltaTime;
 
 private:
-	UE4x360ce* ue4x360ce;
+	FDroneControllerDI* DroneControllerDI;
 	void* UE4x360ceHandle = nullptr;
 };

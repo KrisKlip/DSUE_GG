@@ -1,21 +1,5 @@
-﻿  D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.dll
-  D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.exp
-  D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.ilk
-  D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.lib
-  D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.map
-  D:\SoftwareSource\x360ce\x360ce\x360ce\bin64\Debug\xinput1_3.pdb
-          6 file(s) copied.
-  UE4x360ce.cpp
+﻿  UE4x360ce.cpp
   c:\program files (x86)\windows kits\8.1\include\um\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
-  ForceFeedbackCombiner.cpp
-  ForceFeedback.cpp
-  ControllerCombiner.cpp
-  Controller.cpp
-  Config.cpp
-  Generating Code...
-  Compiling...
-  ControllerBase.cpp
-  Generating Code...
      Creating library D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.lib and object D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.exp
   UE4x360ce.vcxproj -> D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.dll
   UE4x360ce.vcxproj -> D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.pdb (Full PDB)

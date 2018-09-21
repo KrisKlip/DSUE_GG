@@ -11,8 +11,7 @@
 
 #include "IDroneControllerModule.h"
 #include "DroneControllerModule.h"
-
-#include "UE4x360ce.h"
+#include "DroneControllerDI.h"
 
 #define LOCTEXT_NAMESPACE "DroneController"
 
@@ -33,7 +32,7 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	: MessageHandler(InMessageHandler)
 	, bIsSendControllerEvents(false)
 	, DeltaTime(0.f)
-	, ue4x360ce(nullptr)
+	, DroneControllerDI(nullptr)
 {
 	UE_LOG(DroneControllerModule, Warning, TEXT("FDroneController::FDroneController"));
 
@@ -70,9 +69,8 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	// Float axis
 	EKeys::AddKey(FKeyDetails(DroneControllerKeys::DroneController_Stick_Left_X, LOCTEXT("DroneController_Stick_Left_X", "DroneController Left Stick X"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
 
-	ue4x360ce = new UE4x360ce();
-
-	ue4x360ce->Run();
+	DroneControllerDI = new FDroneControllerDI();
+	DroneControllerDI->Run();
 }
 
 FDroneController::~FDroneController()
@@ -83,8 +81,8 @@ FDroneController::~FDroneController()
 		UE4x360ceHandle = nullptr;
 	}
 
-	delete ue4x360ce;
-	ue4x360ce = nullptr;
+	delete DroneControllerDI;
+	DroneControllerDI = nullptr;
 }
 
 void FDroneController::Tick(float DeltaTime)
@@ -94,7 +92,8 @@ void FDroneController::Tick(float DeltaTime)
 
 void FDroneController::SendControllerEvents()
 {
-	UE_LOG(DroneControllerModule, Warning, TEXT("ue4x360ce->GetDeviceNum %d"), ue4x360ce->ue4x360ceFrame.ControllersCount);
+	DroneControllerDI->Update();
+
 	// Just for Debugging
 	{
 		MessageHandler->OnControllerAnalog(DroneControllerKeyNames::DroneController_Stick_Left_X, 0, 0.f);
