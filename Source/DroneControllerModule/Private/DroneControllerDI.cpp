@@ -1,6 +1,7 @@
 #include "DroneControllerDI.h"
 #include "CoreMinimal.h"
-#include <atlstr.h>  
+#include <atlstr.h>
+#include <cstdint>
 
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -42,6 +43,22 @@ int FDroneControllerDI::Run(const FControllerData& ControllerData)
 	return 1;
 }
 
+void FDroneControllerDI::SetDefaultControllerData(const FControllerData& ControllerData)
+{
+	DefaultControllerData = ControllerData;
+
+
+	// find UserIndex by GUID
+	if (!DefaultControllerData.guidProduct.empty())
+	{
+		GUID guid = StringToGUID(DefaultControllerData.guidProduct);
+		int ConfigUserIndex = FDroneControllerDI::self->GetControllerUserIndexByGUID(&guid);
+
+		DefaultControllerData.ConfigUserIndex = ConfigUserIndex;
+	}
+
+}
+
 int FDroneControllerDI::UpdateDevices()
 {
 	/** @brief	Update number of controllers */
@@ -69,7 +86,7 @@ int FDroneControllerDI::UpdateDevices()
 
 XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotFound)
 {
-	if (DefaultControllerData.GUID.empty())
+	if (DefaultControllerData.guidProduct.empty())
 	{
 		if (bUseFirstIfNotFound)
 		{
@@ -83,8 +100,8 @@ XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotF
 	}
 
 	// FindController ID by
-	int ID = DefaultControllerData.ID;
-	if (ID < 0)
+	int ConfigUserIndex = DefaultControllerData.ConfigUserIndex;
+	if (ConfigUserIndex < 0)
 	{
 		if (bUseFirstIfNotFound)
 		{
@@ -98,7 +115,7 @@ XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotF
 	}
 	else
 	{
-		UE4x360ce::XInputGetState(ID, pState);
+		UE4x360ce::XInputGetState(ConfigUserIndex, pState);
 		
 		if (pState == nullptr)
 		{
@@ -112,29 +129,48 @@ XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotF
 	}
 }
 
-int FDroneControllerDI::GetControllerIDByGUID(const GUID* m_productid)
+int FDroneControllerDI::GetControllerUserIndexByGUID(const GUID* m_productid)
 {
-	return UE4x360ce::GetControllerIDByGUID(m_productid);
+	return UE4x360ce::GetControllerUserIndexByGUID(m_productid);
 }
 
 
 BOOL CALLBACK FDroneControllerDI::EnumFFDevicesCallback(const DIDEVICEINSTANCE* pInst, VOID* pContext)
 {
-
-	wchar_t szGUID[64] = { 0 };
-	StringFromGUID2(pInst->guidProduct, szGUID, 64);
-
-	// Convert to string
-	wstring ws(szGUID);
-	string guidProductStr(ws.begin(), ws.end());
+	// Convert GUID to string
+	string guidProductStr = FDroneControllerDI::GUIDtoString(pInst->guidProduct);
 
 	wstring wsProductName(pInst->tszProductName);
 	string ProductName(wsProductName.begin(), wsProductName.end());
-	int ControllerID = FDroneControllerDI::self->GetControllerIDByGUID(&pInst->guidProduct);
+	int ConfigUserIndex = FDroneControllerDI::self->GetControllerUserIndexByGUID(&pInst->guidProduct);
 
-	// check config
-
-	//FDroneControllerDI::self->ControllersData.push_back({ guidProductStr , ProductName });
+	FDroneControllerDI::self->ControllersData.push_back({ ConfigUserIndex, guidProductStr, ProductName });
 
 	return DIENUM_CONTINUE;
+}
+
+string FDroneControllerDI::GUIDtoString(GUID m_productid)
+{
+	wchar_t szGUID[64] = { 0 };
+	StringFromGUID2(m_productid, szGUID, 64);
+
+	// Convert to string
+	wstring ws(szGUID);
+	ws.pop_back();
+	ws.erase(ws.begin());
+
+	return string(ws.begin(), ws.end());
+}
+
+GUID FDroneControllerDI::StringToGUID(const std::string& str)
+{
+	CString guidstr = CString(string("{"+ str + "}").c_str());
+	GUID guid;
+	HRESULT hr = CLSIDFromString(guidstr.GetBuffer(), (LPCLSID)&guid);
+	if (hr != S_OK)
+	{
+		// GUID string was invalid
+	}
+
+	return guid;
 }

@@ -75,18 +75,18 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 		FString ProductName;
 
 		GConfig->GetString(TEXT("SystemSettings"),
-			TEXT("drone.controller.guidProduct"),
+			TEXT("drone.controller.default.guidProduct"),
 			guidProduct,
 			GEngineIni);
 
 		GConfig->GetString(TEXT("SystemSettings"),
-			TEXT("drone.controller.ProductName"),
+			TEXT("drone.controller.defalut.ProductName"),
 			ProductName,
 			GEngineIni);
 
 		// Init controller lib
 		DroneControllerDI = new FDroneControllerDI();
-		DroneControllerDI->Run({ -1, std::string(TCHAR_TO_UTF8(*guidProduct)), std::string(TCHAR_TO_UTF8(*ProductName)), false });
+		DroneControllerDI->Run({ -1, std::string(TCHAR_TO_UTF8(*guidProduct)), std::string(TCHAR_TO_UTF8(*ProductName)) });
 	}
 }
 

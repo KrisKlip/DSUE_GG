@@ -17,10 +17,9 @@ class FDroneControllerDI
 
 public:
 	struct FControllerData {
-		int ID;
-		string GUID;
-		string Name;
-		bool bIsConfigExist;
+		int ConfigUserIndex;
+		string guidProduct;
+		string ProductName;
 	};
 
 	FDroneControllerDI();
@@ -32,9 +31,14 @@ public:
 	int Run(const FControllerData& ControllerData);
 	int UpdateDevices();
 	XINPUT_STATE* GetCurrentControllerState(bool bUseFirstIfNotFound);
-	int GetControllerIDByGUID(const GUID* m_productid);
-	void SetDefaultControllerData(const FControllerData& ControllerData) { DefaultControllerData = ControllerData; }
+	int GetControllerUserIndexByGUID(const GUID* m_productid);
+	void SetDefaultControllerData(const FControllerData& ControllerData);
 	const vector<FControllerData>& GetControllersData() { return ControllersData; }
+
+public:
+	static string GUIDtoString(GUID m_productid);
+	static GUID StringToGUID(const string& str);
+
 
 private:
 	vector<FControllerData> ControllersData;
