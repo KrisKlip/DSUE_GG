@@ -69,8 +69,25 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	// Float axis
 	EKeys::AddKey(FKeyDetails(DroneControllerKeys::DroneController_Stick_Left_X, LOCTEXT("DroneController_Stick_Left_X", "DroneController Left Stick X"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
 
-	DroneControllerDI = new FDroneControllerDI();
-	DroneControllerDI->Run();
+	// Read config controller data and init controller
+	{
+		FString guidProduct;
+		FString ProductName;
+
+		GConfig->GetString(TEXT("SystemSettings"),
+			TEXT("drone.controller.guidProduct"),
+			guidProduct,
+			GEngineIni);
+
+		GConfig->GetString(TEXT("SystemSettings"),
+			TEXT("drone.controller.ProductName"),
+			ProductName,
+			GEngineIni);
+
+		// Init controller lib
+		DroneControllerDI = new FDroneControllerDI();
+		DroneControllerDI->Run({ -1, std::string(TCHAR_TO_UTF8(*guidProduct)), std::string(TCHAR_TO_UTF8(*ProductName)), false });
+	}
 }
 
 FDroneController::~FDroneController()
@@ -92,7 +109,7 @@ void FDroneController::Tick(float DeltaTime)
 
 void FDroneController::SendControllerEvents()
 {
-	DroneControllerDI->Update();
+	DroneControllerDI->UpdateDevices();
 
 	// Just for Debugging
 	{

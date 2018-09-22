@@ -16,9 +16,11 @@ class FDroneControllerDI
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=nullptr; } }
 
 public:
-	struct ControllerData {
+	struct FControllerData {
+		int ID;
 		string GUID;
 		string Name;
+		bool bIsConfigExist;
 	};
 
 	FDroneControllerDI();
@@ -27,19 +29,24 @@ public:
 private:
 	static BOOL CALLBACK EnumFFDevicesCallback(const DIDEVICEINSTANCE* pInst, VOID* pContext);
 public:
-	int Run();
-	int Update();
+	int Run(const FControllerData& ControllerData);
+	int UpdateDevices();
+	XINPUT_STATE* GetCurrentControllerState(bool bUseFirstIfNotFound);
+	int GetControllerIDByGUID(const GUID* m_productid);
+	void SetDefaultControllerData(const FControllerData& ControllerData) { DefaultControllerData = ControllerData; }
+	const vector<FControllerData>& GetControllersData() { return ControllersData; }
 
 private:
-	vector<ControllerData> Controllers;
+	vector<FControllerData> ControllersData;
 	UINT nDevices;
-	int MaxControlelrs;
-	int ControllersCount;
 
 	HRESULT result;
 	DWORD dwUserIndex;
 	XINPUT_STATE* pState;
 	IDirectInput8* m_directInput;
+
+private:
+	FControllerData DefaultControllerData;
 
 private:
 	static FDroneControllerDI* self;

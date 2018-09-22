@@ -9,8 +9,6 @@ FDroneControllerDI* FDroneControllerDI::self = nullptr;
 
 FDroneControllerDI::FDroneControllerDI()
 	: nDevices(0)
-	, ControllersCount(0)
-	, MaxControlelrs(4)
 	, dwUserIndex(0)
 	, pState(new XINPUT_STATE())
 	, m_directInput(nullptr)
@@ -27,7 +25,7 @@ FDroneControllerDI::~FDroneControllerDI()
 	SAFE_RELEASE(m_directInput);
 }
 
-int FDroneControllerDI::Run()
+int FDroneControllerDI::Run(const FControllerData& ControllerData)
 {
 	UE4x360ce::Run();
 
@@ -37,10 +35,14 @@ int FDroneControllerDI::Run()
 		return 1;
 	}
 
+	UpdateDevices();
+
+	SetDefaultControllerData(ControllerData);
+
 	return 1;
 }
 
-int FDroneControllerDI::Update()
+int FDroneControllerDI::UpdateDevices()
 {
 	/** @brief	Update number of controllers */
 	UINT nDevicesLocal = 0;
@@ -50,7 +52,9 @@ int FDroneControllerDI::Update()
 	{
 		// Reset number of devices
 		nDevices = nDevicesLocal;
-		ControllersCount = 0;
+
+		// Reset Controlers Data Array
+		ControllersData.clear();
 
 		// Look for a force feedback device we can use 
 		result = m_directInput->EnumDevices(DI8DEVCLASS_GAMECTRL, FDroneControllerDI::EnumFFDevicesCallback, (void*)1, DIEDFL_ALLDEVICES);
@@ -60,24 +64,57 @@ int FDroneControllerDI::Update()
 		}
 	}
 
-	// recieve input from all controlelrs
-	for (int i = 0; i < ControllersCount; ++i)
+	return 1;
+}
+
+XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotFound)
+{
+	if (DefaultControllerData.GUID.empty())
 	{
-		UE4x360ce::XInputGetState(i, pState);
-		if (pState != nullptr)
+		if (bUseFirstIfNotFound)
 		{
-			if (pState->Gamepad.wButtons)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("GamePad %d"), pState->Gamepad.wButtons);
-			}
+			UE4x360ce::XInputGetState(0, pState);
+			return pState;
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("No pState"));
+			return nullptr;
 		}
 	}
 
-	return 1;
+	// FindController ID by
+	int ID = DefaultControllerData.ID;
+	if (ID < 0)
+	{
+		if (bUseFirstIfNotFound)
+		{
+			UE4x360ce::XInputGetState(0, pState);
+			return pState;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+	else
+	{
+		UE4x360ce::XInputGetState(ID, pState);
+		
+		if (pState == nullptr)
+		{
+			UE4x360ce::XInputGetState(0, pState);
+			return pState;
+		}
+		else
+		{
+			return pState;
+		}
+	}
+}
+
+int FDroneControllerDI::GetControllerIDByGUID(const GUID* m_productid)
+{
+	return UE4x360ce::GetControllerIDByGUID(m_productid);
 }
 
 
@@ -91,10 +128,13 @@ BOOL CALLBACK FDroneControllerDI::EnumFFDevicesCallback(const DIDEVICEINSTANCE* 
 	wstring ws(szGUID);
 	string guidProductStr(ws.begin(), ws.end());
 
-	if (FDroneControllerDI::self->ControllersCount < FDroneControllerDI::self->MaxControlelrs)
-	{
-		FDroneControllerDI::self->ControllersCount++;
-	}
+	wstring wsProductName(pInst->tszProductName);
+	string ProductName(wsProductName.begin(), wsProductName.end());
+	int ControllerID = FDroneControllerDI::self->GetControllerIDByGUID(&pInst->guidProduct);
+
+	// check config
+
+	//FDroneControllerDI::self->ControllersData.push_back({ guidProductStr , ProductName });
 
 	return DIENUM_CONTINUE;
 }

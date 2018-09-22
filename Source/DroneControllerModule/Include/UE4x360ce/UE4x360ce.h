@@ -20,5 +20,5 @@ class UE4x360ce
 public:
 	static __declspec(dllexport) void Run();
 	static __declspec(dllexport) DWORD XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState);
-	static __declspec(dllexport) bool GUIDtoString_helper(std::string* out, const GUID &g);
+	static __declspec(dllexport) int GetControllerIDByGUID(const GUID* m_productid);
 };
