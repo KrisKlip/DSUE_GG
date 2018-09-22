@@ -111,6 +111,13 @@ void FDroneController::SendControllerEvents()
 {
 	DroneControllerDI->UpdateDevices();
 
+	XINPUT_STATE* pState = DroneControllerDI->GetCurrentControllerState(true);
+	if (pState != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("pState->Gamepad.wButtons %d"), pState->Gamepad.wButtons);
+	}
+
+
 	// Just for Debugging
 	{
 		MessageHandler->OnControllerAnalog(DroneControllerKeyNames::DroneController_Stick_Left_X, 0, 0.f);
