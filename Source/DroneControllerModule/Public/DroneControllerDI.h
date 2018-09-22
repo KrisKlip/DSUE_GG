@@ -20,6 +20,7 @@ public:
 		int ConfigUserIndex;
 		string guidProduct;
 		string ProductName;
+		bool bIsDefault;
 	};
 
 	FDroneControllerDI();
@@ -32,16 +33,19 @@ public:
 	int UpdateDevices();
 	XINPUT_STATE* GetCurrentControllerState(bool bUseFirstIfNotFound);
 	int GetControllerUserIndexByGUID(const GUID* m_productid);
-	void SetDefaultControllerData(const FControllerData& ControllerData);
-	const vector<FControllerData>& GetControllersData() { return ControllersData; }
+	void SetDefaultController(const FControllerData& ControllerData);
+	const vector<FControllerData>& GetControllersData() { return ActiveControllersData; }
 
 public:
 	static string GUIDtoString(GUID m_productid);
 	static GUID StringToGUID(const string& str);
 
+private:
+	void UpdateDefaultInActiveControllers();
+	int GetActiveDefaultControllerUserIndex();
 
 private:
-	vector<FControllerData> ControllersData;
+	vector<FControllerData> ActiveControllersData;
 	UINT nDevices;
 
 	HRESULT result;

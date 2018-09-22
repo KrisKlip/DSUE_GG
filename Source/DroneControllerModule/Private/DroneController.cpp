@@ -86,7 +86,7 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 
 		// Init controller lib
 		DroneControllerDI = new FDroneControllerDI();
-		DroneControllerDI->Run({ -1, std::string(TCHAR_TO_UTF8(*guidProduct)), std::string(TCHAR_TO_UTF8(*ProductName)) });
+		DroneControllerDI->Run({ -1, std::string(TCHAR_TO_UTF8(*guidProduct)), std::string(TCHAR_TO_UTF8(*ProductName)), true});
 	}
 }
 

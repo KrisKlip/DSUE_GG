@@ -36,14 +36,15 @@ int FDroneControllerDI::Run(const FControllerData& ControllerData)
 		return 1;
 	}
 
+	// 1.
+	SetDefaultController(ControllerData);
+	// 2.
 	UpdateDevices();
-
-	SetDefaultControllerData(ControllerData);
 
 	return 1;
 }
 
-void FDroneControllerDI::SetDefaultControllerData(const FControllerData& ControllerData)
+void FDroneControllerDI::SetDefaultController(const FControllerData& ControllerData)
 {
 	DefaultControllerData = ControllerData;
 
@@ -56,7 +57,45 @@ void FDroneControllerDI::SetDefaultControllerData(const FControllerData& Control
 
 		DefaultControllerData.ConfigUserIndex = ConfigUserIndex;
 	}
+}
 
+void FDroneControllerDI::UpdateDefaultInActiveControllers()
+{
+	// Update Default controllers array
+	for (int i = 0; i < ActiveControllersData.size(); ++i)
+	{
+		// First controller is default all the time if no default controller is found in active controllers
+		if (i == 0)
+		{
+			ActiveControllersData[i].bIsDefault = true;
+		}
+		else
+		{
+			if (ActiveControllersData[i].guidProduct.compare(DefaultControllerData.guidProduct) == 0)
+			{
+				// reset default controller in array
+				ActiveControllersData[i].bIsDefault = true;
+				ActiveControllersData[0].bIsDefault = false;
+
+				break;
+			}
+		}
+	}
+}
+
+int FDroneControllerDI::GetActiveDefaultControllerUserIndex()
+{
+	int r = -1;
+
+	for (auto ActiveControllerData : ActiveControllersData)
+	{
+		if (ActiveControllerData.bIsDefault)
+		{
+			return ActiveControllerData.ConfigUserIndex;
+		}
+	}
+
+	return r;
 }
 
 int FDroneControllerDI::UpdateDevices()
@@ -71,7 +110,7 @@ int FDroneControllerDI::UpdateDevices()
 		nDevices = nDevicesLocal;
 
 		// Reset Controlers Data Array
-		ControllersData.clear();
+		ActiveControllersData.clear();
 
 		// Look for a force feedback device we can use 
 		result = m_directInput->EnumDevices(DI8DEVCLASS_GAMECTRL, FDroneControllerDI::EnumFFDevicesCallback, (void*)1, DIEDFL_ALLDEVICES);
@@ -79,6 +118,9 @@ int FDroneControllerDI::UpdateDevices()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Failed to EnumFFDevicesCallback"));
 		}
+
+		// Update Controllers
+		UpdateDefaultInActiveControllers();
 	}
 
 	return 1;
@@ -100,7 +142,7 @@ XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotF
 	}
 
 	// FindController ID by
-	int ConfigUserIndex = DefaultControllerData.ConfigUserIndex;
+	int ConfigUserIndex = GetActiveDefaultControllerUserIndex();
 	if (ConfigUserIndex < 0)
 	{
 		if (bUseFirstIfNotFound)
@@ -115,6 +157,8 @@ XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotF
 	}
 	else
 	{
+		// Check if defalut device in array of active cevices
+
 		UE4x360ce::XInputGetState(ConfigUserIndex, pState);
 		
 		if (pState == nullptr)
@@ -144,7 +188,7 @@ BOOL CALLBACK FDroneControllerDI::EnumFFDevicesCallback(const DIDEVICEINSTANCE* 
 	string ProductName(wsProductName.begin(), wsProductName.end());
 	int ConfigUserIndex = FDroneControllerDI::self->GetControllerUserIndexByGUID(&pInst->guidProduct);
 
-	FDroneControllerDI::self->ControllersData.push_back({ ConfigUserIndex, guidProductStr, ProductName });
+	FDroneControllerDI::self->ActiveControllersData.push_back({ ConfigUserIndex, guidProductStr, ProductName, false });
 
 	return DIENUM_CONTINUE;
 }
