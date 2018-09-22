@@ -59,6 +59,15 @@ void FDroneControllerDI::SetDefaultController(const FControllerData& ControllerD
 	}
 }
 
+void FDroneControllerDI::UpdateDefaultController(const FControllerData& ControllerData)
+{
+	// 1.
+	SetDefaultController(ControllerData);
+	// 2.
+	UpdateDefaultInActiveControllers();
+	// 3. Update in ini file
+}
+
 void FDroneControllerDI::UpdateDefaultInActiveControllers()
 {
 	// Update Default controllers array

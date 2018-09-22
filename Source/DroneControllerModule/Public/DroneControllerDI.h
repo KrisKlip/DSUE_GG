@@ -34,6 +34,7 @@ public:
 	XINPUT_STATE* GetCurrentControllerState(bool bUseFirstIfNotFound);
 	int GetControllerUserIndexByGUID(const GUID* m_productid);
 	void SetDefaultController(const FControllerData& ControllerData);
+	void UpdateDefaultController(const FControllerData& ControllerData);
 	const vector<FControllerData>& GetControllersData() { return ActiveControllersData; }
 
 public:
