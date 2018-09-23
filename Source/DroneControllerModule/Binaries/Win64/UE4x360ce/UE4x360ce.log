@@ -1,5 +1,0 @@
-﻿  UE4x360ce.cpp
-  c:\program files (x86)\windows kits\8.1\include\um\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
-     Creating library D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.lib and object D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.exp
-  UE4x360ce.vcxproj -> D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.dll
-  UE4x360ce.vcxproj -> D:\SoftwareSource\x360ce\x360ce\UE4x360ce\bin_64\Debug\UE4x360ce.pdb (Full PDB)
