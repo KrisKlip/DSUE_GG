@@ -51,6 +51,16 @@ namespace DroneControllerKeyNames
 	const FGamepadKeyNames::Type RightTriggerAnalog("DroneController_RightTriggerAnalog");
 }
 
+namespace DroneControllerKeys
+{
+	const FKey LeftAnalogX("DroneController_LeftAnalogX");
+	const FKey LeftAnalogY("DroneController_LeftAnalogY");
+	const FKey RightAnalogX("DroneController_RightAnalogX");
+	const FKey RightAnalogY("DroneController_RightAnalogY");
+	const FKey LeftTriggerAnalog("DroneController_LeftTriggerAnalog");
+	const FKey RightTriggerAnalog("DroneController_RightTriggerAnalog");
+}
+
 static float ShortToNormalizedFloat(int16 AxisVal)
 {
 	// normalize [-32768..32767] -> [-1..1]
@@ -187,12 +197,12 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 
 
 	// Float axis
-	EKeys::AddKey(FKeyDetails(DroneControllerKeyNames::LeftAnalogX, LOCTEXT("DroneController_LeftAnalogX", "DroneController LeftAnalogX"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
-	EKeys::AddKey(FKeyDetails(DroneControllerKeyNames::LeftAnalogY, LOCTEXT("DroneController_LeftAnalogY", "DroneController LeftAnalogY"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
-	EKeys::AddKey(FKeyDetails(DroneControllerKeyNames::RightAnalogX, LOCTEXT("DroneController_RightAnalogX", "DroneController RightAnalogX"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
-	EKeys::AddKey(FKeyDetails(DroneControllerKeyNames::RightAnalogY, LOCTEXT("DroneController_RightAnalogY", "DroneController RightAnalogY"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
-	EKeys::AddKey(FKeyDetails(DroneControllerKeyNames::LeftTriggerAnalog, LOCTEXT("DroneController_LeftTriggerAnalog", "DroneController LeftTriggerAnalog"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
-	EKeys::AddKey(FKeyDetails(DroneControllerKeyNames::RightTriggerAnalog, LOCTEXT("DroneController_RightTriggerAnalog", "DroneController RightTriggerAnalog"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
+	EKeys::AddKey(FKeyDetails(DroneControllerKeys::LeftAnalogX, LOCTEXT("DroneController_LeftAnalogX", "DroneController LeftAnalogX"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
+	EKeys::AddKey(FKeyDetails(DroneControllerKeys::LeftAnalogY, LOCTEXT("DroneController_LeftAnalogY", "DroneController LeftAnalogY"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
+	EKeys::AddKey(FKeyDetails(DroneControllerKeys::RightAnalogX, LOCTEXT("DroneController_RightAnalogX", "DroneController RightAnalogX"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
+	EKeys::AddKey(FKeyDetails(DroneControllerKeys::RightAnalogY, LOCTEXT("DroneController_RightAnalogY", "DroneController RightAnalogY"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
+	EKeys::AddKey(FKeyDetails(DroneControllerKeys::LeftTriggerAnalog, LOCTEXT("DroneController_LeftTriggerAnalog", "DroneController LeftTriggerAnalog"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
+	EKeys::AddKey(FKeyDetails(DroneControllerKeys::RightTriggerAnalog, LOCTEXT("DroneController_RightTriggerAnalog", "DroneController RightTriggerAnalog"), FKeyDetails::GamepadKey | FKeyDetails::FloatAxis, "DroneController"));
 	
 	// Read config controller data and init controller
 	{
