@@ -206,12 +206,12 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	
 	// Read config controller data and init controller
 	{
-		FString guidProduct;
+		FString guidInstance;
 		FString ProductName;
 
 		GConfig->GetString(TEXT("SystemSettings"),
-			TEXT("drone.controller.default.guidProduct"),
-			guidProduct,
+			TEXT("drone.controller.default.guidInstance"),
+			guidInstance,
 			GEngineIni);
 
 		GConfig->GetString(TEXT("SystemSettings"),
@@ -221,7 +221,7 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 
 		// Init controller lib
 		DroneControllerDI = new FDroneControllerDI();
-		DroneControllerDI->Run({ -1, std::string(TCHAR_TO_UTF8(*guidProduct)), std::string(TCHAR_TO_UTF8(*ProductName)), true});
+		DroneControllerDI->Run({ -1, std::string(TCHAR_TO_UTF8(*guidInstance)), std::string(TCHAR_TO_UTF8(*ProductName)), true});
 	}
 }
 

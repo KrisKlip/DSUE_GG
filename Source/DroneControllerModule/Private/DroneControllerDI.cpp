@@ -48,10 +48,10 @@ void FDroneControllerDI::SetDefaultController(const FControllerData& ControllerD
 
 
 	// find UserIndex by GUID
-	if (!DefaultControllerData.guidProduct.empty())
+	if (!DefaultControllerData.guidInstance.empty())
 	{
-		GUID guid = StringToGUID(DefaultControllerData.guidProduct);
-		int ConfigUserIndex = FDroneControllerDI::self->GetControllerUserIndexByGUID(&guid);
+		GUID guid = StringToGUID(DefaultControllerData.guidInstance);
+		int ConfigUserIndex = FDroneControllerDI::self->GetControllerUserIndexByGUIDInstance(&guid);
 
 		DefaultControllerData.ConfigUserIndex = ConfigUserIndex;
 	}
@@ -78,7 +78,7 @@ void FDroneControllerDI::UpdateDefaultInActiveControllers()
 		}
 		else
 		{
-			if (ActiveControllersData[i].guidProduct.compare(DefaultControllerData.guidProduct) == 0)
+			if (ActiveControllersData[i].guidInstance.compare(DefaultControllerData.guidInstance) == 0)
 			{
 				// reset default controller in array
 				ActiveControllersData[i].bIsDefault = true;
@@ -140,7 +140,7 @@ bool FDroneControllerDI::UpdateDevices()
 
 XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotFound)
 {
-	if (DefaultControllerData.guidProduct.empty())
+	if (DefaultControllerData.guidInstance.empty())
 	{
 		if (bUseFirstIfNotFound)
 		{
@@ -185,22 +185,22 @@ XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotF
 	}
 }
 
-int FDroneControllerDI::GetControllerUserIndexByGUID(const GUID* m_productid)
+int FDroneControllerDI::GetControllerUserIndexByGUIDInstance(const GUID* guidInstance)
 {
-	return UE4x360ce::GetControllerUserIndexByGUID(m_productid);
+	return UE4x360ce::GetControllerUserIndexByGUIDInstance(guidInstance);
 }
 
 
 BOOL CALLBACK FDroneControllerDI::EnumFFDevicesCallback(const DIDEVICEINSTANCE* pInst, VOID* pContext)
 {
 	// Convert GUID to string
-	string guidProductStr = FDroneControllerDI::GUIDtoString(pInst->guidProduct);
+	string guidInstanceStr = FDroneControllerDI::GUIDtoString(pInst->guidInstance);
 
 	wstring wsProductName(pInst->tszProductName);
 	string ProductName(wsProductName.begin(), wsProductName.end());
-	int ConfigUserIndex = FDroneControllerDI::self->GetControllerUserIndexByGUID(&pInst->guidProduct);
+	int ConfigUserIndex = FDroneControllerDI::self->GetControllerUserIndexByGUIDInstance(&pInst->guidInstance);
 
-	FDroneControllerDI::self->ActiveControllersData.push_back({ ConfigUserIndex, guidProductStr, ProductName, false });
+	FDroneControllerDI::self->ActiveControllersData.push_back({ ConfigUserIndex, guidInstanceStr, ProductName, false });
 
 	return DIENUM_CONTINUE;
 }

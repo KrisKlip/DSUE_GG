@@ -20,5 +20,5 @@ class UE4x360ce
 public:
 	static __declspec(dllexport) void Run();
 	static __declspec(dllexport) DWORD XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState);
-	static __declspec(dllexport) int GetControllerUserIndexByGUID(const GUID* m_productid);
+	static __declspec(dllexport) int GetControllerUserIndexByGUIDInstance(const GUID* guidInstance);
 };
