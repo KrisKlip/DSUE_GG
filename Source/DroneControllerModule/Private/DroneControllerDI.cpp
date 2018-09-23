@@ -3,14 +3,15 @@
 #include <atlstr.h>
 #include <cstdint>
 
+#include <dbt.h>
+
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
 FDroneControllerDI* FDroneControllerDI::self = nullptr;
 
 FDroneControllerDI::FDroneControllerDI()
-	: nDevices(0)
-	, dwUserIndex(0)
+	: dwUserIndex(0)
 	, pState(new XINPUT_STATE())
 	, m_directInput(nullptr)
 {
@@ -24,6 +25,13 @@ FDroneControllerDI::~FDroneControllerDI()
 {
 	SAFE_DELETE(pState);
 	SAFE_RELEASE(m_directInput);
+
+	// Destroy dummy evnts window
+	if (ELWindow != nullptr)
+	{
+		DestroyWindow(ELWindow);
+	}
+	UnregisterClass(ELWindowClassName, hInstance);
 }
 
 int FDroneControllerDI::Run(const FControllerData& ControllerData)
@@ -37,7 +45,13 @@ int FDroneControllerDI::Run(const FControllerData& ControllerData)
 	}
 
 	// 1.
+	CreateELWindow();
+
+	// 2.
 	SetDefaultController(ControllerData);
+
+	// 3.
+	UpdateDevices();
 
 	return 1;
 }
@@ -62,7 +76,7 @@ void FDroneControllerDI::UpdateDefaultController(const FControllerData& Controll
 	// 1.
 	SetDefaultController(ControllerData);
 	// 2.
-	UpdateDefaultInActiveControllers();
+	UpdateDevices();
 	// 3. Update in ini file
 }
 
@@ -105,37 +119,72 @@ int FDroneControllerDI::GetActiveDefaultControllerUserIndex()
 	return r;
 }
 
-bool FDroneControllerDI::UpdateDevices()
+void FDroneControllerDI::CreateELWindow()
 {
+	//Make a dummy window, this is the only way I know to register for window events (successfully listening to WM_DEVICECHANGE messages)
+	ELClass.style = CS_VREDRAW;
+	ELClass.lpfnWndProc = &FDroneControllerDI::WinProcCallback;
+	ELClass.cbClsExtra = 0;
+	ELClass.cbWndExtra = 0;
+	ELClass.hInstance = hInstance;
+	ELClass.hIcon = NULL;
+	ELClass.hCursor = NULL;
+	ELClass.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
+	ELClass.lpszMenuName = NULL;
+	ELClass.lpszClassName = ELWindowClassName;
+	if (!RegisterClass(&ELClass)) return;
 
-	bool bNeedsUpdate = false;
+	ELWindow = CreateWindow(ELWindowClassName, NULL, WS_MINIMIZE, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
 
-	/** @brief	Update number of controllers */
-	UINT nDevicesLocal = 0;
-	// Update devices only on start or if plug un-plug during the game
-	GetRawInputDeviceList(NULL, &nDevicesLocal, sizeof(RAWINPUTDEVICELIST));
-	if (nDevicesLocal != nDevices)
+	if (ELWindow == NULL) return;
+
+	DEV_BROADCAST_DEVICEINTERFACE NotificationFilter;
+	ZeroMemory(&NotificationFilter, sizeof(NotificationFilter));
+
+	NotificationFilter.dbcc_size = sizeof(NotificationFilter);
+	NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+	NotificationFilter.dbcc_reserved = 0;
+
+	NotificationFilter.dbcc_classguid = { 0x25dbce51, 0x6c8f, 0x4a72,
+		0x8a, 0x6d, 0xb5, 0x4c, 0x2b, 0x4f, 0xc8, 0x35 };
+
+	HDEVNOTIFY hDevNotify = RegisterDeviceNotification(NULL, &NotificationFilter, DEVICE_NOTIFY_SERVICE_HANDLE);
+
+	UE_LOG(LogTemp, Warning, TEXT("CreateELWindow."));
+}
+
+INT_PTR FDroneControllerDI::WinProcCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message) {
+
+	case WM_DEVICECHANGE:
 	{
-		// Reset number of devices
-		nDevices = nDevicesLocal;
+		UE_LOG(LogTemp, Warning, TEXT("WM_DEVICECHANGE"));
+		FDroneControllerDI::self->UpdateDevices();
+		break;
+	}
+	default:
+		break;
+	}
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
 
-		// Reset Controlers Data Array
-		ActiveControllersData.clear();
+void FDroneControllerDI::UpdateDevices()
+{
+	/** @brief	Update number of controllers */
+	// Reset Controlers Data Array
+	ActiveControllersData.clear();
 
-		// Look for a force feedback device we can use 
-		result = m_directInput->EnumDevices(DI8DEVCLASS_GAMECTRL, FDroneControllerDI::EnumFFDevicesCallback, (void*)1, DIEDFL_ALLDEVICES);
-		if (FAILED(result))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Failed to EnumFFDevicesCallback"));
-		}
-
-		// Update Controllers
-		UpdateDefaultInActiveControllers();
-
-		bNeedsUpdate = true;
+	// Look for a force feedback device we can use 
+	result = m_directInput->EnumDevices(DI8DEVCLASS_GAMECTRL, FDroneControllerDI::EnumFFDevicesCallback, (void*)1, DIEDFL_ALLDEVICES);
+	if (FAILED(result))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to EnumFFDevicesCallback"));
 	}
 
-	return bNeedsUpdate;
+	// Update Controllers
+	UpdateDefaultInActiveControllers();
 }
 
 XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotFound)

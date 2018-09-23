@@ -244,8 +244,6 @@ void FDroneController::Tick(float DeltaTime)
 
 void FDroneController::SendControllerEvents()
 {
-	DroneControllerDI->UpdateDevices();
-
 	// TODO. Batname. fix it. now it update controllers state each frame.
 	bNeedsControllerStateUpdate = true;
 

@@ -30,7 +30,7 @@ private:
 	static BOOL CALLBACK EnumFFDevicesCallback(const DIDEVICEINSTANCE* pInst, VOID* pContext);
 public:
 	int Run(const FControllerData& ControllerData);
-	bool UpdateDevices();
+	void UpdateDevices();
 	XINPUT_STATE* GetCurrentControllerState(bool bUseFirstIfNotFound);
 	int GetControllerUserIndexByGUIDInstance(const GUID* guidInstance);
 	void SetDefaultController(const FControllerData& ControllerData);
@@ -47,7 +47,6 @@ private:
 
 private:
 	vector<FControllerData> ActiveControllersData;
-	UINT nDevices;
 
 	HRESULT result;
 	DWORD dwUserIndex;
@@ -59,4 +58,13 @@ private:
 
 private:
 	static FDroneControllerDI* self;
+
+// Windows event listener window
+private:
+	LPTSTR ELWindowClassName = TEXT("ELWindow");
+	WNDCLASS ELClass;
+	HWND ELWindow;
+private:
+	void CreateELWindow();
+	static INT_PTR WINAPI WinProcCallback(HWND hWnd,UINT message, WPARAM wParam, LPARAM lParam);
 };
