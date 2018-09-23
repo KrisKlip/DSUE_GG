@@ -54,6 +54,7 @@ public class DroneControllerModule : ModuleRules
 
             //  lib
             PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, PlatformString, "UE4x360ce", "UE4x360ce.lib"));
+            PublicAdditionalLibraries.Add("atls.lib");
 
             // Add dll
             PublicDelayLoadDLLs.Add("UE4x360ce.dll");
