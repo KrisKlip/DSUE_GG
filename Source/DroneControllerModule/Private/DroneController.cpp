@@ -96,7 +96,8 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 		FControllerState& ControllerState = ControllerStates[ControllerIndex];
 		FMemory::Memzero(&ControllerState, sizeof(FControllerState));
 
-		ControllerState.ControllerId = ControllerIndex;
+		// TODO. Batname. Fer new send all signals to  same 0 indx controller
+		ControllerState.ControllerId = 0;// ControllerIndex;
 	}
 
 	bIsGamepadAttached = false;
@@ -235,67 +236,9 @@ void FDroneController::SendControllerEvents()
 {
 	DroneControllerDI->UpdateDevices();
 
-	//XINPUT_STATE* pState = DroneControllerDI->GetCurrentControllerState(true);
-	//if (pState != nullptr)
-	//{
-	//	// If we get some button signal
-	//	if (pState->Gamepad.wButtons)
-	//	{
-	//		// Release old and send new button event
-	//		if (pState->Gamepad.wButtons != CurrentButtonPressedStage)
-	//		{
-	//			// Release old
-	//			if (CurrentButtonPressedStage)
-	//			{
-	//				UE_LOG(LogTemp, Warning, TEXT("Release %d"), CurrentButtonPressedStage);
-	//			}
+	// TODO. Batname. fix it. now it update controllers state each frame.
+	bNeedsControllerStateUpdate = true;
 
-	//			// Send new
-	//			UE_LOG(LogTemp, Warning, TEXT("Press %d"), pState->Gamepad.wButtons);
-
-	//			// Update current press
-	//			CurrentButtonPressedStage = pState->Gamepad.wButtons;
-	//		}
-	//		if (!CurrentButtonPressedStage)
-	//		{
-	//			// Just send Press eevent
-	//			UE_LOG(LogTemp, Warning, TEXT("Press %d"), pState->Gamepad.wButtons);
-
-	//			// Update current press
-	//			CurrentButtonPressedStage = pState->Gamepad.wButtons;
-	//		}
-	//	}
-	//	else
-	//	{
-	//		// If current button has some stage
-	//		if (CurrentButtonPressedStage)
-	//		{
-	//			// Release old
-	//			UE_LOG(LogTemp, Warning, TEXT("Release %d"), CurrentButtonPressedStage);
-
-	//			// Update current press
-	//			CurrentButtonPressedStage = pState->Gamepad.wButtons;
-	//		}
-	//		else
-	//		{
-	//			// do nothing if no current pressed stage and current stage is 0
-	//		}
-	//	}
-	//}
-	//else // no signal from any controller
-	//{
-	//	// Release button
-	//	if (CurrentButtonPressedStage)
-	//	{
-	//		// Release old
-	//		UE_LOG(LogTemp, Warning, TEXT("Release %d"), CurrentButtonPressedStage);
-
-	//		// Update current press
-	//		CurrentButtonPressedStage = pState->Gamepad.wButtons;
-	//	}
-	//	
-	//}
-	
 	bool bWereConnected[DRONE_MAX_NUM_XINPUT_CONTROLLERS];
 	XINPUT_STATE XInputStates[DRONE_MAX_NUM_XINPUT_CONTROLLERS];
 
@@ -434,7 +377,7 @@ void FDroneController::SendControllerEvents()
 			VibrationState.wLeftMotorSpeed = (::WORD) (LargeValue * 65535.0f);
 			VibrationState.wRightMotorSpeed = (::WORD) (SmallValue * 65535.0f);
 
-			// TODO use emulator for it
+			// TODO. Batname. We need use emulator for it
 			// XInputSetState((::DWORD) ControllerState.ControllerId, &VibrationState);
 		}
 	}

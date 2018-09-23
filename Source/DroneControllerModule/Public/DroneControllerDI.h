@@ -30,7 +30,7 @@ private:
 	static BOOL CALLBACK EnumFFDevicesCallback(const DIDEVICEINSTANCE* pInst, VOID* pContext);
 public:
 	int Run(const FControllerData& ControllerData);
-	int UpdateDevices();
+	bool UpdateDevices();
 	XINPUT_STATE* GetCurrentControllerState(bool bUseFirstIfNotFound);
 	int GetControllerUserIndexByGUID(const GUID* m_productid);
 	void SetDefaultController(const FControllerData& ControllerData);

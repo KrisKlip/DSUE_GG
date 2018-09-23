@@ -38,8 +38,6 @@ int FDroneControllerDI::Run(const FControllerData& ControllerData)
 
 	// 1.
 	SetDefaultController(ControllerData);
-	// 2.
-	UpdateDevices();
 
 	return 1;
 }
@@ -107,8 +105,11 @@ int FDroneControllerDI::GetActiveDefaultControllerUserIndex()
 	return r;
 }
 
-int FDroneControllerDI::UpdateDevices()
+bool FDroneControllerDI::UpdateDevices()
 {
+
+	bool bNeedsUpdate = false;
+
 	/** @brief	Update number of controllers */
 	UINT nDevicesLocal = 0;
 	// Update devices only on start or if plug un-plug during the game
@@ -130,9 +131,11 @@ int FDroneControllerDI::UpdateDevices()
 
 		// Update Controllers
 		UpdateDefaultInActiveControllers();
+
+		bNeedsUpdate = true;
 	}
 
-	return 1;
+	return bNeedsUpdate;
 }
 
 XINPUT_STATE* FDroneControllerDI::GetCurrentControllerState(bool bUseFirstIfNotFound)
