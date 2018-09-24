@@ -26,9 +26,6 @@ public:
 	virtual bool Exec(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override;
 	virtual bool IsGamepadAttached() const override;
 
-	void SetNeedsControllerStateUpdate() { bNeedsControllerStateUpdate = true; }
-
-
 // Bluprint functional libary accessable
 public:
 	bool bIsSendControllerEvents;
@@ -78,10 +75,6 @@ private:
 		/** Current force feedback values */
 		FForceFeedbackValues ForceFeedback;
 	};
-
-	/** If we've been notified by the system that the controller state may have changed */
-	bool bNeedsControllerStateUpdate;
-
 	bool bIsGamepadAttached;
 
 	/** In the engine, all controllers map to xbox controllers for consistency */

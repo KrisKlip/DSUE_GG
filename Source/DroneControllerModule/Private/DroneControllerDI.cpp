@@ -14,6 +14,7 @@ FDroneControllerDI::FDroneControllerDI()
 	: dwUserIndex(0)
 	, pState(new XINPUT_STATE())
 	, m_directInput(nullptr)
+	, bNeedsControllerStateUpdate(true)
 {
 	if (FDroneControllerDI::self == nullptr)
 	{
@@ -37,6 +38,9 @@ FDroneControllerDI::~FDroneControllerDI()
 int FDroneControllerDI::Run(const FControllerData& ControllerData)
 {
 	UE4x360ce::Run();
+
+	// For testing disable all inputs from Xinput devices only via Direact input
+	//UE4x360ce::XInputEnable(false);
 
 	result = DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_directInput, NULL);
 	if (FAILED(result))
@@ -163,6 +167,7 @@ INT_PTR FDroneControllerDI::WinProcCallback(HWND hWnd, UINT message, WPARAM wPar
 		UE_LOG(LogTemp, Warning, TEXT("WM_DEVICECHANGE"));
 		UE4x360ce::Reset(); // restart config and controllers
 		FDroneControllerDI::self->UpdateDevices(); // Update active directinput devices
+		FDroneControllerDI::self->bNeedsControllerStateUpdate = true;
 		break;
 	}
 	default:

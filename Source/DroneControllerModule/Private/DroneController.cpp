@@ -111,7 +111,6 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	}
 
 	bIsGamepadAttached = false;
-	bNeedsControllerStateUpdate = true;
 	InitialButtonRepeatDelay = 0.2f;
 	ButtonRepeatDelay = 0.1f;
 
@@ -245,7 +244,7 @@ void FDroneController::Tick(float DeltaTime)
 void FDroneController::SendControllerEvents()
 {
 	// TODO. Batname. fix it. now it update controllers state each frame.
-	bNeedsControllerStateUpdate = true;
+	//bNeedsControllerStateUpdate = true;
 
 	bool bWereConnected[DRONE_MAX_NUM_XINPUT_CONTROLLERS];
 	XINPUT_STATE XInputStates[DRONE_MAX_NUM_XINPUT_CONTROLLERS];
@@ -257,7 +256,7 @@ void FDroneController::SendControllerEvents()
 
 		bWereConnected[ControllerIndex] = ControllerState.bIsConnected;
 
-		if (ControllerState.bIsConnected || bNeedsControllerStateUpdate)
+		if (ControllerState.bIsConnected || DroneControllerDI->bNeedsControllerStateUpdate)
 		{
 			XINPUT_STATE& XInputState = XInputStates[ControllerIndex];
 			FMemory::Memzero(&XInputState, sizeof(XINPUT_STATE));
@@ -335,6 +334,7 @@ void FDroneController::SendControllerEvents()
 
 			OnControllerAnalog(DroneControllerKeyNames::LeftAnalogX, Gamepad.sThumbLX, ShortToNormalizedFloat(Gamepad.sThumbLX), ControllerState.LeftXAnalog, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
 			OnControllerAnalog(DroneControllerKeyNames::LeftAnalogY, Gamepad.sThumbLY, ShortToNormalizedFloat(Gamepad.sThumbLY), ControllerState.LeftYAnalog, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+			UE_LOG(LogTemp, Warning, TEXT("Gamepad.sThumbLY %d, ControllerState.LeftYAnalog %d, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE %d"), Gamepad.sThumbLY, ControllerState.LeftYAnalog, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
 
 			OnControllerAnalog(DroneControllerKeyNames::RightAnalogX, Gamepad.sThumbRX, ShortToNormalizedFloat(Gamepad.sThumbRX), ControllerState.RightXAnalog, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
 			OnControllerAnalog(DroneControllerKeyNames::RightAnalogY, Gamepad.sThumbRY, ShortToNormalizedFloat(Gamepad.sThumbRY), ControllerState.RightYAnalog, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
@@ -390,7 +390,7 @@ void FDroneController::SendControllerEvents()
 		}
 	}
 
-	bNeedsControllerStateUpdate = false;
+	DroneControllerDI->bNeedsControllerStateUpdate = false;
 }
 
 void FDroneController::SetMessageHandler(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler)

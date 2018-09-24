@@ -36,6 +36,9 @@ public:
 	void SetDefaultController(const FControllerData& ControllerData);
 	void UpdateDefaultController(const FControllerData& ControllerData);
 	const vector<FControllerData>& GetControllersData() { return ActiveControllersData; }
+public:
+	/** If we've been notified by the system that the controller state may have changed */
+	bool bNeedsControllerStateUpdate;
 
 public:
 	static string GUIDtoString(GUID m_productid);
