@@ -161,7 +161,8 @@ INT_PTR FDroneControllerDI::WinProcCallback(HWND hWnd, UINT message, WPARAM wPar
 	case WM_DEVICECHANGE:
 	{
 		UE_LOG(LogTemp, Warning, TEXT("WM_DEVICECHANGE"));
-		FDroneControllerDI::self->UpdateDevices();
+		UE4x360ce::Reset(); // restart config and controllers
+		FDroneControllerDI::self->UpdateDevices(); // Update active directinput devices
 		break;
 	}
 	default:

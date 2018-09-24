@@ -21,4 +21,5 @@ public:
 	static __declspec(dllexport) void Run();
 	static __declspec(dllexport) DWORD XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState);
 	static __declspec(dllexport) int GetControllerUserIndexByGUIDInstance(const GUID* guidInstance);
+	static __declspec(dllexport) void Reset();
 };
