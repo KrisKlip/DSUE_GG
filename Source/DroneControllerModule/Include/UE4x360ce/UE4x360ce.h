@@ -23,4 +23,5 @@ public:
 	static __declspec(dllexport) void XInputEnable(bool enable);
 	static __declspec(dllexport) int GetControllerUserIndexByGUIDInstance(const GUID* guidInstance);
 	static __declspec(dllexport) void Reset();
+	static __declspec(dllexport) int16_t GetDeadZone(DWORD dwUserIndex, int DeadZoneIndex, bool& bIsFound);
 };
