@@ -26,6 +26,8 @@ public:
 	virtual bool Exec(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override;
 	virtual bool IsGamepadAttached() const override;
 
+	static void PreInit();
+
 // Bluprint functional libary accessable
 public:
 	bool bIsSendControllerEvents;

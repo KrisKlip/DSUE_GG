@@ -11,6 +11,7 @@ class FDroneControllerModule : public IDroneControllerModule
 {
 public:
 
+	virtual void StartupModule() override;
 	virtual TSharedRef<FDroneController> GetDroneControllerRef() override { return DroneController.ToSharedRef(); }
 
 private:
