@@ -21,4 +21,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "DroneController")
 	static TArray<FDroneControllerState> GetDroneControllerStates();
+
+	UFUNCTION(BlueprintCallable, Category = "DroneController")
+	static int32 GetDroneControllerMode();
 };
