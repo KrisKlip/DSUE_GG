@@ -4,14 +4,9 @@
 #include "IInputDevice.h"
 #include "IInputDeviceModule.h"
 #include "IInputInterface.h"
+#include "DroneControllerStates.h"
 
 class FDroneControllerDI;
-
-/** Max number of controllers. */
-#define DRONE_MAX_NUM_XINPUT_CONTROLLERS 4
-
-/** Max number of controller buttons.  Must be < 256*/
-#define DRONE_MAX_NUM_CONTROLLER_BUTTONS 24
 
 class FDroneController : public IInputDevice
 {
@@ -28,6 +23,9 @@ public:
 
 	static void PreInit();
 
+public:
+	const TArray<FDroneControllerState>& GetDroneControllerStates() const { return ControllerStates; }
+
 // Bluprint functional libary accessable
 public:
 	bool bIsSendControllerEvents;
@@ -42,48 +40,13 @@ private:
 	FDroneControllerDI* DroneControllerDI;
 	void* UE4x360ceHandle = nullptr;
 
-	struct FControllerState
-	{
-		/** Last frame's button states, so we only send events on edges */
-		bool ButtonStates[DRONE_MAX_NUM_CONTROLLER_BUTTONS];
-
-		/** Next time a repeat event should be generated for each button */
-		double NextRepeatTime[DRONE_MAX_NUM_CONTROLLER_BUTTONS];
-
-		/** Raw Left thumb x analog value */
-		int16 LeftXAnalog;
-
-		/** Raw left thumb y analog value */
-		int16 LeftYAnalog;
-
-		/** Raw Right thumb x analog value */
-		int16 RightXAnalog;
-
-		/** Raw Right thumb x analog value */
-		int16 RightYAnalog;
-
-		/** Left Trigger analog value */
-		uint8 LeftTriggerAnalog;
-
-		/** Right trigger analog value */
-		uint8 RightTriggerAnalog;
-
-		/** Id of the controller */
-		int32 ControllerId;
-
-		/** If the controller is currently connected */
-		bool bIsConnected;
-
-		/** Current force feedback values */
-		FForceFeedbackValues ForceFeedback;
-	};
 	bool bIsGamepadAttached;
 
 	/** In the engine, all controllers map to xbox controllers for consistency */
 	uint8	X360ToXboxControllerMapping[DRONE_MAX_NUM_CONTROLLER_BUTTONS];
 
 	/** Controller states */
-	FControllerState ControllerStates[DRONE_MAX_NUM_XINPUT_CONTROLLERS];
+	TArray<FDroneControllerState> ControllerStates;
 
 	/** Delay before sending a repeat message after a button was first pressed */
 	float InitialButtonRepeatDelay;

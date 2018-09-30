@@ -12,5 +12,9 @@ bool UDroneControllerBFL::SetSendControllerEvents(bool bIsSendControllerEvents)
 	return true;
 }
 
+TArray<FDroneControllerState> UDroneControllerBFL::GetDroneControllerStates()
+{
+	auto DroneControllerRef = IDroneControllerModule::Get().GetDroneControllerRef();
 
-
+	return DroneControllerRef->GetDroneControllerStates();
+}

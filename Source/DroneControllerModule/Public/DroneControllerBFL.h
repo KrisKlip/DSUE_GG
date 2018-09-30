@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "DroneControllerStates.h"
 #include "DroneControllerBFL.generated.h"
 
 /**
@@ -15,7 +16,9 @@ class DRONECONTROLLERMODULE_API UDroneControllerBFL : public UBlueprintFunctionL
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = "DroneControlle")
+	UFUNCTION(BlueprintCallable, Category = "DroneController")
 	static bool SetSendControllerEvents(bool bIsSendControllerEvents);
-	
+
+	UFUNCTION(BlueprintCallable, Category = "DroneController")
+	static TArray<FDroneControllerState> GetDroneControllerStates();
 };

@@ -139,13 +139,20 @@ FDroneController::FDroneController(const TSharedRef<FGenericApplicationMessageHa
 	}
 
 	// Set all controllers, 4 by default
+	ControllerStates.AddUninitialized(DRONE_MAX_NUM_XINPUT_CONTROLLERS);
 	for (int32 ControllerIndex = 0; ControllerIndex < DRONE_MAX_NUM_XINPUT_CONTROLLERS; ++ControllerIndex)
 	{
-		FControllerState& ControllerState = ControllerStates[ControllerIndex];
-		FMemory::Memzero(&ControllerState, sizeof(FControllerState));
+		FDroneControllerState& ControllerState = ControllerStates[ControllerIndex];
+		FMemory::Memzero(&ControllerState, sizeof(FDroneControllerState));
 
 		// TODO. Batname. Fer new send all signals to  same 0 indx controller
 		ControllerState.ControllerId = 0;// ControllerIndex;
+
+		// initialize buttons
+		for (int i = 0; i < DRONE_MAX_NUM_CONTROLLER_BUTTONS; ++i)
+		{
+			ControllerState.ButtonStates.Add(false);
+		}
 	}
 
 	bIsGamepadAttached = false;
@@ -252,7 +259,7 @@ void FDroneController::SendControllerEvents()
 	bIsGamepadAttached = false;
 	for (int32 ControllerIndex = 0; ControllerIndex < DRONE_MAX_NUM_XINPUT_CONTROLLERS; ++ControllerIndex)
 	{
-		FControllerState& ControllerState = ControllerStates[ControllerIndex];
+		FDroneControllerState& ControllerState = ControllerStates[ControllerIndex];
 
 		bWereConnected[ControllerIndex] = ControllerState.bIsConnected;
 
@@ -273,7 +280,7 @@ void FDroneController::SendControllerEvents()
 
 	for (int32 ControllerIndex = 0; ControllerIndex < DRONE_MAX_NUM_XINPUT_CONTROLLERS; ++ControllerIndex)
 	{
-		FControllerState& ControllerState = ControllerStates[ControllerIndex];
+		FDroneControllerState& ControllerState = ControllerStates[ControllerIndex];
 
 		const bool bWasConnected = bWereConnected[ControllerIndex];
 
@@ -293,7 +300,9 @@ void FDroneController::SendControllerEvents()
 				FCoreDelegates::OnControllerConnectionChange.Broadcast(false, -1, ControllerState.ControllerId);
 			}
 
-			bool CurrentStates[DRONE_MAX_NUM_CONTROLLER_BUTTONS] = { 0 };
+			// Local button states
+			TArray<bool> CurrentStates;
+			CurrentStates.AddUninitialized(DRONE_MAX_NUM_CONTROLLER_BUTTONS);
 
 			// Get DeadZones
 			bool bIsFound = false;
@@ -368,6 +377,21 @@ void FDroneController::SendControllerEvents()
 			OnControllerAnalog(DroneControllerKeyNames::RightTriggerAnalog, Gamepad.bRightTrigger, Gamepad.bRightTrigger / 255.f, ControllerState.RightTriggerAnalog, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
 
 			const double CurrentTime = FPlatformTime::Seconds();
+
+			// Keep in track RawButtonsState
+			ControllerState.RawButtonsState = XInputState.Gamepad.wButtons;
+
+			// Update name and guid of device
+			const vector<FDroneControllerDI::FControllerData>& ActiveControllersData = DroneControllerDI->GetControllersData();
+			for (const auto& ActiveControllerData : ActiveControllersData)
+			{
+				if (ActiveControllerData.ConfigUserIndex == ControllerIndex)
+				{
+					ControllerState.guidInstance = ActiveControllerData.guidInstance.c_str();
+					ControllerState.ProductName = ActiveControllerData.ProductName.c_str();
+				}
+			}
+
 
 			// For each button check against the previous state and send the correct message if any
 			for (int32 ButtonIndex = 0; ButtonIndex < DRONE_MAX_NUM_CONTROLLER_BUTTONS; ++ButtonIndex)

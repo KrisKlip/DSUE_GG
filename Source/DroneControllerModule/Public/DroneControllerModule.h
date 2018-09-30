@@ -16,7 +16,4 @@ public:
 
 private:
 	virtual TSharedPtr< class IInputDevice > CreateInputDevice(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler) override;
-
-private:
-	TSharedPtr<FDroneController> DroneController = nullptr;
 };
