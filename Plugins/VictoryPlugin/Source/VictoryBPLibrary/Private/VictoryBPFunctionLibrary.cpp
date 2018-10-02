@@ -1191,7 +1191,11 @@ bool UVictoryBPFunctionLibrary::VictoryReBindActionKey(FVictoryInput Original, F
 		//Search by original
 		if(Each.ActionName.ToString() == Original.ActionName &&
 			Each.Key == Original.Key
-		){   
+		){  
+
+			UE_LOG(LogTemp, Warning, TEXT("Each.ActionName %s, Original.ActionName %s, Each.Key %s, Original.Key %s, NewBinding.Key %s"),
+				*Each.ActionName.ToString(), *Original.ActionName, *Each.Key.ToString(), *Original.Key.ToString(), *NewBinding.Key.ToString()
+			);
 			//Update to new!
 			UVictoryBPFunctionLibrary::UpdateActionMapping(Each,NewBinding);
 			Found = true;
