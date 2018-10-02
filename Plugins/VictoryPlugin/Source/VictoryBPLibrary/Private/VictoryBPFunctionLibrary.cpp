@@ -1176,6 +1176,35 @@ bool UVictoryBPFunctionLibrary::VictoryReBindAxisKey(FVictoryInputAxis Original,
 	return Found;
 }
 
+bool UVictoryBPFunctionLibrary::VictoryFindAction(FVictoryInput ActionToFind, FVictoryInput &VictoryInputOut)
+{
+	bool Found = false;
+	VictoryInputOut = FVictoryInput();
+
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	if (!Settings) return false;
+
+	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+
+	//~~~
+	for (FInputActionKeyMapping& Each : Actions)
+	{
+		//Search ActionToFind
+		if (Each.ActionName.ToString() == ActionToFind.ActionName &&
+			Each.Key == ActionToFind.Key
+			) {
+			// Return Found action
+			UpdateVictoryActionMapping(VictoryInputOut, Each);
+			Found = true;
+			break;
+		}
+	}
+
+
+	return Found;
+}
+
+
 bool UVictoryBPFunctionLibrary::VictoryReBindActionKey(FVictoryInput Original, FVictoryInput NewBinding)
 {
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
@@ -1215,6 +1244,44 @@ bool UVictoryBPFunctionLibrary::VictoryReBindActionKey(FVictoryInput Original, F
 		}
 	}
 	return Found;
+}
+
+bool UVictoryBPFunctionLibrary::VictoryBindActionKey(FVictoryInput NewBinding)
+{
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	if (!Settings) return false;
+
+	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+
+	//~~~
+	bool Bind = false;
+	for (FInputActionKeyMapping& Each : Actions)
+	{
+		//Search by original
+		if (Each.ActionName.ToString() != NewBinding.ActionName &&
+			Each.Key != NewBinding.Key
+			) {
+			// Add new
+			FInputActionKeyMapping NewInputActionKeyMapping;
+			UVictoryBPFunctionLibrary::UpdateActionMapping(NewInputActionKeyMapping, NewBinding);
+			Actions.Add(NewInputActionKeyMapping);
+			Bind = true;
+			break;
+		}
+	}
+
+	if (Bind)
+	{
+		//SAVES TO DISK
+		const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
+
+		//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
+		for (TObjectIterator<UPlayerInput> It; It; ++It)
+		{
+			It->ForceRebuildingKeyMaps(true);
+		}
+	}
+	return Bind;
 }
 
 void UVictoryBPFunctionLibrary::GetAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, TArray<UUserWidget*>& FoundWidgets,bool TopLevelOnly)
