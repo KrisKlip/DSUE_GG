@@ -76,7 +76,7 @@ enum class EVictoryHMDDevice : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FVictoryInput
+struct FVictoryInput : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -469,6 +469,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryReBindAxisKey(FVictoryInputAxis Original, FVictoryInputAxis NewBinding);
 
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryFindAction(FVictoryInput ActionToFind, FVictoryInput &VictoryInputOut);
+
 	static FORCEINLINE void UpdateAxisMapping(FInputAxisKeyMapping& Destination, const FVictoryInputAxis& VictoryInputBind)
 	{
 		Destination.Key = VictoryInputBind.Key;
@@ -489,12 +492,26 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		Destination.bCmd = VictoryInputBind.bCmd;
 	}
 
+	static FORCEINLINE void UpdateVictoryActionMapping(FVictoryInput& VictoryInput, const FInputActionKeyMapping& InputActionKeyMapping)
+	{
+		VictoryInput.Key = InputActionKeyMapping.Key;
+		VictoryInput.bShift = InputActionKeyMapping.bShift;
+		VictoryInput.bCtrl = InputActionKeyMapping.bCtrl;
+		VictoryInput.bAlt = InputActionKeyMapping.bAlt;
+		VictoryInput.bCmd = InputActionKeyMapping.bCmd;
+		VictoryInput.ActionName = InputActionKeyMapping.ActionName.ToString();
+		VictoryInput.KeyAsString = InputActionKeyMapping.Key.ToString();
+	}
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 		static void VictoryGetAllActionKeyBindings(TArray<FVictoryInput>& Bindings);
 
 	/** You can leave the AsString field blank :) Returns false if the key could not be found as an existing mapping!  Enjoy! <3  Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryReBindActionKey(FVictoryInput Original, FVictoryInput NewBinding);
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindActionKey(FVictoryInput NewBinding);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryRemoveActionKeyBind(FVictoryInput ToRemove);
