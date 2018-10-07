@@ -1258,20 +1258,21 @@ bool UVictoryBPFunctionLibrary::VictoryBindActionKey(FVictoryInput NewBinding)
 	for (FInputActionKeyMapping& Each : Actions)
 	{
 		//Search by original
-		if (Each.ActionName.ToString() != NewBinding.ActionName &&
-			Each.Key != NewBinding.Key
+		if (Each.ActionName.ToString() == NewBinding.ActionName &&
+			Each.Key == NewBinding.Key
 			) {
-			// Add new
-			FInputActionKeyMapping NewInputActionKeyMapping;
-			UVictoryBPFunctionLibrary::UpdateActionMapping(NewInputActionKeyMapping, NewBinding);
-			Actions.Add(NewInputActionKeyMapping);
+			// Is is already there
 			Bind = true;
 			break;
 		}
 	}
 
-	if (Bind)
+	if (Bind == false)
 	{
+		FInputActionKeyMapping NewInputActionKeyMapping;
+		UVictoryBPFunctionLibrary::UpdateActionMapping(NewInputActionKeyMapping, NewBinding);
+		Actions.Add(NewInputActionKeyMapping);
+
 		//SAVES TO DISK
 		const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
 
@@ -1280,7 +1281,10 @@ bool UVictoryBPFunctionLibrary::VictoryBindActionKey(FVictoryInput NewBinding)
 		{
 			It->ForceRebuildingKeyMaps(true);
 		}
+
+		Bind = true;
 	}
+
 	return Bind;
 }
 

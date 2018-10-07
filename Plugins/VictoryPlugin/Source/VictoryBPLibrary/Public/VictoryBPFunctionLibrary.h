@@ -490,6 +490,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		Destination.bCtrl = VictoryInputBind.bCtrl;
 		Destination.bAlt = VictoryInputBind.bAlt;
 		Destination.bCmd = VictoryInputBind.bCmd;
+		Destination.ActionName = FName(*VictoryInputBind.ActionName);
 	}
 
 	static FORCEINLINE void UpdateVictoryActionMapping(FVictoryInput& VictoryInput, const FInputActionKeyMapping& InputActionKeyMapping)
