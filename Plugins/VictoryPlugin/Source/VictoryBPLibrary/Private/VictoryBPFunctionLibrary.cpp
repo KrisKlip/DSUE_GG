@@ -1176,6 +1176,48 @@ bool UVictoryBPFunctionLibrary::VictoryReBindAxisKey(FVictoryInputAxis Original,
 	return Found;
 }
 
+bool UVictoryBPFunctionLibrary::VictoryBindAxisKey(FVictoryInputAxis NewBinding)
+{
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	if (!Settings) return false;
+
+	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
+
+	//~~~
+	bool Bind = false;
+	for (FInputAxisKeyMapping& Each : Axi)
+	{
+		//Search by original
+		if (Each.AxisName.ToString() == NewBinding.AxisName &&
+			Each.Key == NewBinding.Key
+			) {
+			// Is is already there
+			Bind = true;
+			break;
+		}
+	}
+
+	if (Bind == false)
+	{
+		FInputAxisKeyMapping NewInputAxisKeyMapping;
+		UVictoryBPFunctionLibrary::UpdateAxisMapping(NewInputAxisKeyMapping, NewBinding);
+		Axi.Add(NewInputAxisKeyMapping);
+
+		//SAVES TO DISK
+		const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
+
+		//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
+		for (TObjectIterator<UPlayerInput> It; It; ++It)
+		{
+			It->ForceRebuildingKeyMaps(true);
+		}
+
+		Bind = true;
+	}
+
+	return Bind;
+}
+
 bool UVictoryBPFunctionLibrary::VictoryFindAction(FVictoryInput ActionToFind, FVictoryInput &VictoryInputOut)
 {
 	bool Found = false;

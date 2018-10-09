@@ -127,7 +127,7 @@ struct FVictoryInput : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FVictoryInputAxis
+struct FVictoryInputAxis : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -470,14 +470,17 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static bool VictoryReBindAxisKey(FVictoryInputAxis Original, FVictoryInputAxis NewBinding);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindAxisKey(FVictoryInputAxis NewBinding);
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryFindAction(FVictoryInput ActionToFind, FVictoryInput &VictoryInputOut);
 
 	static FORCEINLINE void UpdateAxisMapping(FInputAxisKeyMapping& Destination, const FVictoryInputAxis& VictoryInputBind)
 	{
 		Destination.Key = VictoryInputBind.Key;
 		Destination.Scale = VictoryInputBind.Scale;
+		Destination.AxisName = FName(*VictoryInputBind.AxisName);
 	}
-
 
 	//	Action Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
