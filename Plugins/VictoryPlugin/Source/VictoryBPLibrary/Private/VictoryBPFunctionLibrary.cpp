@@ -1220,6 +1220,15 @@ bool UVictoryBPFunctionLibrary::VictoryBindAxisKeys(const TArray<FVictoryInputAx
 		Axi.Add(NewInputAxisKeyMapping);
 	}
 
+	//SAVES TO DISK
+	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
+
+	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
+	for (TObjectIterator<UPlayerInput> It; It; ++It)
+	{
+		It->ForceRebuildingKeyMaps(true);
+	}
+
 	return true;
 }
 
