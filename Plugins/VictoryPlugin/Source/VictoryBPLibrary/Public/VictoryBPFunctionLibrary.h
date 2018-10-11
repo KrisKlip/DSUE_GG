@@ -473,6 +473,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static bool VictoryEmptyAllAxisKeyBindings();
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindAxisKeys(const TArray<FVictoryInputAxis>& NewBindings);
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryBindAxisKey(FVictoryInputAxis NewBinding, bool bIsAllowDuplication = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
@@ -519,6 +522,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryEmptyAllActionKeyBindings();
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindActionKeys(const TArray<FVictoryInput>& NewBindings);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryBindActionKey(FVictoryInput NewBinding, bool bIsAllowDuplication = false);

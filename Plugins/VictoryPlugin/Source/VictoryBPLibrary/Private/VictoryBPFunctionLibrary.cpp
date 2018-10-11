@@ -1194,6 +1194,32 @@ bool UVictoryBPFunctionLibrary::VictoryEmptyAllAxisKeyBindings()
 		It->ForceRebuildingKeyMaps(true);
 	}
 
+	//SAVES TO DISK
+	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
+
+	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
+	for (TObjectIterator<UPlayerInput> It; It; ++It)
+	{
+		It->ForceRebuildingKeyMaps(true);
+	}
+
+	return true;
+}
+
+bool UVictoryBPFunctionLibrary::VictoryBindAxisKeys(const TArray<FVictoryInputAxis>& NewBindings)
+{
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	if (!Settings) return false;
+
+	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
+
+	for (const auto& NewBinding : NewBindings)
+	{
+		FInputAxisKeyMapping NewInputAxisKeyMapping;
+		UVictoryBPFunctionLibrary::UpdateAxisMapping(NewInputAxisKeyMapping, NewBinding);
+		Axi.Add(NewInputAxisKeyMapping);
+	}
+
 	return true;
 }
 
@@ -1324,6 +1350,32 @@ bool UVictoryBPFunctionLibrary::VictoryEmptyAllActionKeyBindings()
 
 	//SAVES TO DISK
 	Settings->SaveKeyMappings();
+
+	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
+	for (TObjectIterator<UPlayerInput> It; It; ++It)
+	{
+		It->ForceRebuildingKeyMaps(true);
+	}
+
+	return true;
+}
+
+bool UVictoryBPFunctionLibrary::VictoryBindActionKeys(const TArray<FVictoryInput>& NewBindings)
+{
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	if (!Settings) return false;
+
+	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+
+	for (const auto& NewBinding : NewBindings)
+	{
+		FInputActionKeyMapping NewInputActionKeyMapping;
+		UVictoryBPFunctionLibrary::UpdateActionMapping(NewInputActionKeyMapping, NewBinding);
+		Actions.Add(NewInputActionKeyMapping);
+	}
+
+	//SAVES TO DISK
+	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
 
 	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
 	for (TObjectIterator<UPlayerInput> It; It; ++It)
