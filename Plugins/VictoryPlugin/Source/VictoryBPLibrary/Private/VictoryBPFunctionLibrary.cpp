@@ -1176,7 +1176,28 @@ bool UVictoryBPFunctionLibrary::VictoryReBindAxisKey(FVictoryInputAxis Original,
 	return Found;
 }
 
-bool UVictoryBPFunctionLibrary::VictoryBindAxisKey(FVictoryInputAxis NewBinding)
+bool UVictoryBPFunctionLibrary::VictoryEmptyAllAxisKeyBindings()
+{
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	if (!Settings) return false;
+
+	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
+
+	Axi.Empty();
+
+	//SAVES TO DISK
+	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
+
+	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
+	for (TObjectIterator<UPlayerInput> It; It; ++It)
+	{
+		It->ForceRebuildingKeyMaps(true);
+	}
+
+	return true;
+}
+
+bool UVictoryBPFunctionLibrary::VictoryBindAxisKey(FVictoryInputAxis NewBinding, bool bIsAllowDuplication)
 {
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 	if (!Settings) return false;
@@ -1185,15 +1206,19 @@ bool UVictoryBPFunctionLibrary::VictoryBindAxisKey(FVictoryInputAxis NewBinding)
 
 	//~~~
 	bool Bind = false;
-	for (FInputAxisKeyMapping& Each : Axi)
+
+	if (bIsAllowDuplication == false)
 	{
-		//Search by original
-		if (Each.AxisName.ToString() == NewBinding.AxisName &&
-			Each.Key == NewBinding.Key
-			) {
-			// Is is already there
-			Bind = true;
-			break;
+		for (FInputAxisKeyMapping& Each : Axi)
+		{
+			//Search by original
+			if (Each.AxisName.ToString() == NewBinding.AxisName &&
+				Each.Key == NewBinding.Key
+				) {
+				// Is is already there
+				Bind = true;
+				break;
+			}
 		}
 	}
 
@@ -1288,7 +1313,28 @@ bool UVictoryBPFunctionLibrary::VictoryReBindActionKey(FVictoryInput Original, F
 	return Found;
 }
 
-bool UVictoryBPFunctionLibrary::VictoryBindActionKey(FVictoryInput NewBinding)
+bool UVictoryBPFunctionLibrary::VictoryEmptyAllActionKeyBindings()
+{
+	UInputSettings* Settings = GetMutableDefault<UInputSettings>();
+	if (!Settings) return false;
+
+	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+
+	Actions.Empty();
+
+	//SAVES TO DISK
+	Settings->SaveKeyMappings();
+
+	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
+	for (TObjectIterator<UPlayerInput> It; It; ++It)
+	{
+		It->ForceRebuildingKeyMaps(true);
+	}
+
+	return true;
+}
+
+bool UVictoryBPFunctionLibrary::VictoryBindActionKey(FVictoryInput NewBinding, bool bIsAllowDuplication)
 {
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 	if (!Settings) return false;
@@ -1297,15 +1343,18 @@ bool UVictoryBPFunctionLibrary::VictoryBindActionKey(FVictoryInput NewBinding)
 
 	//~~~
 	bool Bind = false;
-	for (FInputActionKeyMapping& Each : Actions)
+	if (bIsAllowDuplication == false)
 	{
-		//Search by original
-		if (Each.ActionName.ToString() == NewBinding.ActionName &&
-			Each.Key == NewBinding.Key
-			) {
-			// Is is already there
-			Bind = true;
-			break;
+		for (FInputActionKeyMapping& Each : Actions)
+		{
+			//Search by original
+			if (Each.ActionName.ToString() == NewBinding.ActionName &&
+				Each.Key == NewBinding.Key
+				) {
+				// Is is already there
+				Bind = true;
+				break;
+			}
 		}
 	}
 
