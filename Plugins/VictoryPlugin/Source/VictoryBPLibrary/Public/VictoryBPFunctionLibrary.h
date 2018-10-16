@@ -127,7 +127,7 @@ struct FVictoryInput : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FVictoryInputAxis
+struct FVictoryInputAxis : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -452,10 +452,10 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	//~~~~ Key Re Binding ! ~~~~
 
+	//	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Axis Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryGetAllAxisAndActionMappingsForKey(FKey Key, TArray<FVictoryInput>& ActionBindings, TArray<FVictoryInputAxis>& AxisBindings);
 
-	//	Axis Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static FVictoryInputAxis VictoryGetVictoryInputAxis(const FKeyEvent& KeyEvent);
 
@@ -470,16 +470,25 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static bool VictoryReBindAxisKey(FVictoryInputAxis Original, FVictoryInputAxis NewBinding);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryEmptyAllAxisKeyBindings();
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindAxisKeys(const TArray<FVictoryInputAxis>& NewBindings);
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindAxisKey(FVictoryInputAxis NewBinding, bool bIsAllowDuplication = false);
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryFindAction(FVictoryInput ActionToFind, FVictoryInput &VictoryInputOut);
 
 	static FORCEINLINE void UpdateAxisMapping(FInputAxisKeyMapping& Destination, const FVictoryInputAxis& VictoryInputBind)
 	{
 		Destination.Key = VictoryInputBind.Key;
 		Destination.Scale = VictoryInputBind.Scale;
+		Destination.AxisName = FName(*VictoryInputBind.AxisName);
 	}
 
-
-	//	Action Mapping
+	//	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Action Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static FVictoryInput VictoryGetVictoryInput(const FKeyEvent& KeyEvent);
 
@@ -490,6 +499,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		Destination.bCtrl = VictoryInputBind.bCtrl;
 		Destination.bAlt = VictoryInputBind.bAlt;
 		Destination.bCmd = VictoryInputBind.bCmd;
+		Destination.ActionName = FName(*VictoryInputBind.ActionName);
 	}
 
 	static FORCEINLINE void UpdateVictoryActionMapping(FVictoryInput& VictoryInput, const FInputActionKeyMapping& InputActionKeyMapping)
@@ -511,7 +521,13 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static bool VictoryReBindActionKey(FVictoryInput Original, FVictoryInput NewBinding);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryBindActionKey(FVictoryInput NewBinding);
+	static bool VictoryEmptyAllActionKeyBindings();
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindActionKeys(const TArray<FVictoryInput>& NewBindings);
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
+	static bool VictoryBindActionKey(FVictoryInput NewBinding, bool bIsAllowDuplication = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryRemoveActionKeyBind(FVictoryInput ToRemove);
