@@ -27,7 +27,7 @@ public class DroneControllerModule : ModuleRules
 	{
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "InputDevice" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "InputDevice", "ApplicationCore" });
  
 		//The path for the header files
 		PublicIncludePaths.AddRange(new string[] {

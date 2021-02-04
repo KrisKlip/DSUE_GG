@@ -15,6 +15,9 @@
 //MD5 Hash
 #include "Runtime/Core/Public/Misc/SecureHash.h"
 
+#include "Runtime/Engine/Public/VorbisAudioInfo.h"
+
+
 #include "StaticMeshResources.h"
 
 #include "HeadMountedDisplay.h"
@@ -22,7 +25,7 @@
 #include "GenericTeamAgentInterface.h"
 
 //For PIE error messages
-#include "MessageLog.h"
+#include "Runtime/Core/Public/Logging/MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
 
 //Use MessasgeLog like this: (see GameplayStatics.cpp
@@ -50,7 +53,7 @@
 
 
 //Apex issues, can add iOS here  <3 Rama
-#if PLATFORM_ANDROID || PLATFORM_HTML5 || PLATFORM_IOS
+#if PLATFORM_ANDROID || PLATFORM_IOS
 #ifdef WITH_APEX
 #undef WITH_APEX
 #endif
@@ -58,8 +61,8 @@
 #endif //APEX EXCLUSIONS
 
 //~~~ PhysX ~~~
-#include "PhysXIncludes.h"
-#include "PhysXPublic.h"		//For the ptou conversions
+//#include "PhysXIncludes.h"
+//#include "PhysXPublic.h"		//For the ptou conversions
 
 //For Scene Locking using Epic's awesome helper macros like SCOPED_SCENE_READ_LOCK
 #include "Runtime/Engine/Private/PhysicsEngine/PhysXSupport.h"
@@ -298,6 +301,9 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
 	int32 InstanceNumber,
 	FVector Location, FRotator Rotation,bool& Success
 ){ 
+	//! See .h deprecation
+	
+	/*
 	Success = false; 
     if(!WorldContextObject) return nullptr;
 	 
@@ -311,7 +317,7 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
 	FName LevelFName = FName(*FullName);
     FString PackageFileName = FullName;   
 	
-    ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, NULL);
+    ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, ULevelStreamingDynamic::StaticClass(), NAME_None, RF_Transient, NULL);
 	
 	if(!StreamingLevel)
 	{
@@ -342,7 +348,7 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
  
     StreamingLevel->LevelColor = FColor::MakeRandomColor();
     StreamingLevel->bShouldBeLoaded = true;
-    StreamingLevel->bShouldBeVisible = true;
+    StreamingLevel->SetShouldBeVisible(true);
     StreamingLevel->bShouldBlockOnLoad = false;
     StreamingLevel->bInitiallyLoaded = true;
     StreamingLevel->bInitiallyVisible = true;
@@ -369,41 +375,43 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
       
 	Success = true;
     return StreamingLevel;
+	*/
+	return nullptr;
  }	
 	
 //~~~~~~~
 //		AI
 //~~~~~~~ 
-EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWithFilter(
-	APawn* Pawn, 
-	const FVector& Dest, 
-	TSubclassOf<UNavigationQueryFilter> FilterClass ,
-	float AcceptanceRadius , 
-	bool bProjectDestinationToNavigation ,
-	bool bStopOnOverlap ,
-	bool bCanStrafe 
-){
-	if(!Pawn) 
-	{
-		return EPathFollowingRequestResult::Failed;
-	}
-	
-	AAIController* AIControl = Cast<AAIController>(Pawn->GetController());
-	if(!AIControl) 
-	{
-		return EPathFollowingRequestResult::Failed;
-	} 
-	
-	return AIControl->MoveToLocation(
-		Dest, 
-		AcceptanceRadius,
-		bStopOnOverlap, 	//bStopOnOverlap
-		true,						//bUsePathfinding 
-		bProjectDestinationToNavigation, 
-		bCanStrafe,			//bCanStrafe
-		FilterClass			//<~~~
-	);
-}
+//EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWithFilter(
+//	APawn* Pawn, 
+//	const FVector& Dest, 
+//	TSubclassOf<UNavigationQueryFilter> FilterClass ,
+//	float AcceptanceRadius , 
+//	bool bProjectDestinationToNavigation ,
+//	bool bStopOnOverlap ,
+//	bool bCanStrafe 
+//){
+//	if(!Pawn) 
+//	{
+//		return EPathFollowingRequestResult::Failed;
+//	}
+//	
+//	AAIController* AIControl = Cast<AAIController>(Pawn->GetController());
+//	if(!AIControl) 
+//	{
+//		return EPathFollowingRequestResult::Failed;
+//	} 
+//	
+//	return AIControl->MoveToLocation(
+//		Dest, 
+//		AcceptanceRadius,
+//		bStopOnOverlap, 	//bStopOnOverlap
+//		true,						//bUsePathfinding 
+//		bProjectDestinationToNavigation, 
+//		bCanStrafe,			//bCanStrafe
+//		FilterClass			//<~~~
+//	);
+//}
 	
 //~~~~~~
 //GPU
@@ -574,29 +582,29 @@ bool UVictoryBPFunctionLibrary::VictoryDestructible_DestroyChunk(UDestructibleCo
 	//Visibility
 	DestructibleComp->SetChunkVisible( HitItem, false );
 	 
-	//Collision
-	physx::PxShape** PShapes;
-	const physx::PxU32 PShapeCount = DestructibleComp->ApexDestructibleActor->getChunkPhysXShapes(PShapes, HitItem);
-	if (PShapeCount > 0)
-	{    
-		PxFilterData PQueryFilterData,PSimFilterData; //null data
-		  
-		for(uint32 ShapeIndex = 0; ShapeIndex < PShapeCount; ++ShapeIndex)
-		{ 
-			PxShape* Shape = PShapes[ShapeIndex];
-			if(!Shape) continue;
-			
-			{ 
-				SCOPED_SCENE_WRITE_LOCK(Shape->getActor()->getScene());
-				
-				Shape->setQueryFilterData(PQueryFilterData); //null data
-				Shape->setSimulationFilterData(PSimFilterData); //null data
-				Shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
-				Shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
-				Shape->setFlag(PxShapeFlag::eVISUALIZATION, false);	
-			}
-		}
-	}
+	////Collision
+	//physx::PxShape** PShapes;
+	//const physx::PxU32 PShapeCount = DestructibleComp->ApexDestructibleActor->getChunkPhysXShapes(PShapes, HitItem);
+	//if (PShapeCount > 0)
+	//{    
+	//	PxFilterData PQueryFilterData,PSimFilterData; //null data
+	//	  
+	//	for(uint32 ShapeIndex = 0; ShapeIndex < PShapeCount; ++ShapeIndex)
+	//	{ 
+	//		PxShape* Shape = PShapes[ShapeIndex];
+	//		if(!Shape) continue;
+	//		
+	//		{ 
+	//			SCOPED_SCENE_WRITE_LOCK(Shape->getActor()->getScene());
+	//			
+	//			Shape->setQueryFilterData(PQueryFilterData); //null data
+	//			Shape->setSimulationFilterData(PSimFilterData); //null data
+	//			Shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+	//			Shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+	//			Shape->setFlag(PxShapeFlag::eVISUALIZATION, false);	
+	//		}
+	//	}
+	//}
 	return true;
 	#endif //WITH_APEX
 	 
@@ -936,6 +944,49 @@ void UVictoryBPFunctionLibrary::SaveGameObject_GetAllSaveSlotFileNames(TArray<FS
 	GetFiles(Path,FileNames); //see top of this file, my own file IO code - Rama
 }
 
+void UVictoryBPFunctionLibrary::SaveGameObject_GetMostRecentSaveSlotFileName(FString& FileName, bool& bFound)
+{
+	FileName.Empty();
+	bFound = false;
+
+	const FString Path = VictoryPaths__SavedDir() + "SaveGames";
+
+	IFileManager& FileManager = IFileManager::Get();
+
+	TArray<TTuple<FDateTime, FString>> FileTimeStamps;
+
+	FString Str;
+	auto FilenamesVisitor = MakeDirectoryVisitor(
+		[&](const TCHAR* FilenameOrDirectory, bool bIsDirectory)
+	{
+		//Files
+		if (!bIsDirectory)
+		{
+			FString CleanFileName = FPaths::GetCleanFilename(FilenameOrDirectory);
+
+			//Filter by Extension
+			if (FPaths::GetExtension(CleanFileName).ToLower() == "sav")
+			{
+				FDateTime LastModified = FileManager.GetTimeStamp(FilenameOrDirectory);
+				FileTimeStamps.Add(TTuple<FDateTime, FString>(LastModified, CleanFileName));
+			}
+		}
+		return true;
+	}
+	);
+
+	FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*Path, FilenamesVisitor);
+
+	if (FileTimeStamps.Num() > 0)
+	{
+		FileTimeStamps.Sort([](const TTuple<FDateTime, FString>& LeftHandSide, const TTuple<FDateTime, FString>& RightHandSide) { return LeftHandSide.Key > RightHandSide.Key; });
+
+		FileName = FileTimeStamps[0].Value;
+
+		bFound = true;
+	}
+}
+
 //~~~ Victory Paths ~~~
 
 FString UVictoryBPFunctionLibrary::VictoryPaths__Win64Dir_BinaryLocation()
@@ -1023,7 +1074,7 @@ void UVictoryBPFunctionLibrary::VictoryGetAllAxisKeyBindings(TArray<FVictoryInpu
 	const UInputSettings* Settings = GetDefault<UInputSettings>();
 	if(!Settings) return;
 	
-	const TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
+	const TArray<FInputAxisKeyMapping>& Axi = Settings->GetAxisMappings();
 	
 	for(const FInputAxisKeyMapping& Each : Axi)
 	{
@@ -1036,7 +1087,7 @@ void UVictoryBPFunctionLibrary::VictoryRemoveAxisKeyBind(FVictoryInputAxis ToRem
 	UInputSettings* Settings = GetMutableDefault<UInputSettings>();
 	if(!Settings) return;
 	
-	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
+	TArray<FInputAxisKeyMapping>& Axi = const_cast<TArray<FInputAxisKeyMapping>&>(Settings->GetAxisMappings());
 	  
 	bool Found = false;
 	for(int32 v = 0; v < Axi.Num(); v++)
@@ -1070,7 +1121,7 @@ void UVictoryBPFunctionLibrary::VictoryGetAllActionKeyBindings(TArray<FVictoryIn
 	const UInputSettings* Settings = GetDefault<UInputSettings>();
 	if(!Settings) return;
 	
-	const TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+	const TArray<FInputActionKeyMapping>& Actions = Settings->GetActionMappings();
 	
 	for(const FInputActionKeyMapping& Each : Actions)
 	{
@@ -1084,7 +1135,7 @@ void UVictoryBPFunctionLibrary::VictoryRemoveActionKeyBind(FVictoryInput ToRemov
 	UInputSettings* Settings = GetMutableDefault<UInputSettings>();
 	if(!Settings) return;
 	
-	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+	TArray<FInputActionKeyMapping>& Actions = const_cast<TArray<FInputActionKeyMapping>&>(Settings->GetActionMappings());
 	  
 	bool Found = false;
 	for(int32 v = 0; v < Actions.Num(); v++)
@@ -1119,7 +1170,7 @@ void UVictoryBPFunctionLibrary::VictoryGetAllAxisAndActionMappingsForKey(FKey Ke
 		const UInputSettings* Settings = GetDefault<UInputSettings>();
 	if(!Settings) return;
 	
-	const TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+	const TArray<FInputActionKeyMapping>& Actions = Settings->GetActionMappings();
 	
 	for(const FInputActionKeyMapping& Each : Actions)
 	{
@@ -1129,7 +1180,7 @@ void UVictoryBPFunctionLibrary::VictoryGetAllAxisAndActionMappingsForKey(FKey Ke
 		}
 	}
 
-	const TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
+	const TArray<FInputAxisKeyMapping>& Axi = Settings->GetAxisMappings();
 	
 	for(const FInputAxisKeyMapping& Each : Axi)
 	{  
@@ -1144,7 +1195,7 @@ bool UVictoryBPFunctionLibrary::VictoryReBindAxisKey(FVictoryInputAxis Original,
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 	if(!Settings) return false;
 
-	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
+	TArray<FInputAxisKeyMapping>& Axi = const_cast<TArray<FInputAxisKeyMapping>&>(Settings->GetAxisMappings());
 	
 	//~~~
 	 
@@ -1176,143 +1227,12 @@ bool UVictoryBPFunctionLibrary::VictoryReBindAxisKey(FVictoryInputAxis Original,
 	return Found;
 }
 
-bool UVictoryBPFunctionLibrary::VictoryEmptyAllAxisKeyBindings()
-{
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	if (!Settings) return false;
-
-	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
-
-	Axi.Empty();
-
-	//SAVES TO DISK
-	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
-
-	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
-	for (TObjectIterator<UPlayerInput> It; It; ++It)
-	{
-		It->ForceRebuildingKeyMaps(true);
-	}
-
-	//SAVES TO DISK
-	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
-
-	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
-	for (TObjectIterator<UPlayerInput> It; It; ++It)
-	{
-		It->ForceRebuildingKeyMaps(true);
-	}
-
-	return true;
-}
-
-bool UVictoryBPFunctionLibrary::VictoryBindAxisKeys(const TArray<FVictoryInputAxis>& NewBindings)
-{
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	if (!Settings) return false;
-
-	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
-
-	for (const auto& NewBinding : NewBindings)
-	{
-		FInputAxisKeyMapping NewInputAxisKeyMapping;
-		UVictoryBPFunctionLibrary::UpdateAxisMapping(NewInputAxisKeyMapping, NewBinding);
-		Axi.Add(NewInputAxisKeyMapping);
-	}
-
-	//SAVES TO DISK
-	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
-
-	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
-	for (TObjectIterator<UPlayerInput> It; It; ++It)
-	{
-		It->ForceRebuildingKeyMaps(true);
-	}
-
-	return true;
-}
-
-bool UVictoryBPFunctionLibrary::VictoryBindAxisKey(FVictoryInputAxis NewBinding, bool bIsAllowDuplication)
-{
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	if (!Settings) return false;
-
-	TArray<FInputAxisKeyMapping>& Axi = Settings->AxisMappings;
-
-	//~~~
-	bool Bind = false;
-
-	if (bIsAllowDuplication == false)
-	{
-		for (FInputAxisKeyMapping& Each : Axi)
-		{
-			//Search by original
-			if (Each.AxisName.ToString() == NewBinding.AxisName &&
-				Each.Key == NewBinding.Key
-				) {
-				// Is is already there
-				Bind = true;
-				break;
-			}
-		}
-	}
-
-	if (Bind == false)
-	{
-		FInputAxisKeyMapping NewInputAxisKeyMapping;
-		UVictoryBPFunctionLibrary::UpdateAxisMapping(NewInputAxisKeyMapping, NewBinding);
-		Axi.Add(NewInputAxisKeyMapping);
-
-		//SAVES TO DISK
-		const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
-
-		//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
-		for (TObjectIterator<UPlayerInput> It; It; ++It)
-		{
-			It->ForceRebuildingKeyMaps(true);
-		}
-
-		Bind = true;
-	}
-
-	return Bind;
-}
-
-bool UVictoryBPFunctionLibrary::VictoryFindAction(FVictoryInput ActionToFind, FVictoryInput &VictoryInputOut)
-{
-	bool Found = false;
-	VictoryInputOut = FVictoryInput();
-
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	if (!Settings) return false;
-
-	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
-
-	//~~~
-	for (FInputActionKeyMapping& Each : Actions)
-	{
-		//Search ActionToFind
-		if (Each.ActionName.ToString() == ActionToFind.ActionName &&
-			Each.Key == ActionToFind.Key
-			) {
-			// Return Found action
-			UpdateVictoryActionMapping(VictoryInputOut, Each);
-			Found = true;
-			break;
-		}
-	}
-
-
-	return Found;
-}
-
-
 bool UVictoryBPFunctionLibrary::VictoryReBindActionKey(FVictoryInput Original, FVictoryInput NewBinding)
 {
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 	if(!Settings) return false;
 
-	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
+	TArray<FInputActionKeyMapping>& Actions = const_cast<TArray<FInputActionKeyMapping>&>(Settings->GetActionMappings());
 	
 	//~~~
 	
@@ -1322,11 +1242,7 @@ bool UVictoryBPFunctionLibrary::VictoryReBindActionKey(FVictoryInput Original, F
 		//Search by original
 		if(Each.ActionName.ToString() == Original.ActionName &&
 			Each.Key == Original.Key
-		){  
-
-			UE_LOG(LogTemp, Warning, TEXT("Each.ActionName %s, Original.ActionName %s, Each.Key %s, Original.Key %s, NewBinding.Key %s"),
-				*Each.ActionName.ToString(), *Original.ActionName, *Each.Key.ToString(), *Original.Key.ToString(), *NewBinding.Key.ToString()
-			);
+		){   
 			//Update to new!
 			UVictoryBPFunctionLibrary::UpdateActionMapping(Each,NewBinding);
 			Found = true;
@@ -1346,98 +1262,6 @@ bool UVictoryBPFunctionLibrary::VictoryReBindActionKey(FVictoryInput Original, F
 		}
 	}
 	return Found;
-}
-
-bool UVictoryBPFunctionLibrary::VictoryEmptyAllActionKeyBindings()
-{
-	UInputSettings* Settings = GetMutableDefault<UInputSettings>();
-	if (!Settings) return false;
-
-	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
-
-	Actions.Empty();
-
-	//SAVES TO DISK
-	Settings->SaveKeyMappings();
-
-	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
-	for (TObjectIterator<UPlayerInput> It; It; ++It)
-	{
-		It->ForceRebuildingKeyMaps(true);
-	}
-
-	return true;
-}
-
-bool UVictoryBPFunctionLibrary::VictoryBindActionKeys(const TArray<FVictoryInput>& NewBindings)
-{
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	if (!Settings) return false;
-
-	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
-
-	for (const auto& NewBinding : NewBindings)
-	{
-		FInputActionKeyMapping NewInputActionKeyMapping;
-		UVictoryBPFunctionLibrary::UpdateActionMapping(NewInputActionKeyMapping, NewBinding);
-		Actions.Add(NewInputActionKeyMapping);
-	}
-
-	//SAVES TO DISK
-	const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
-
-	//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
-	for (TObjectIterator<UPlayerInput> It; It; ++It)
-	{
-		It->ForceRebuildingKeyMaps(true);
-	}
-
-	return true;
-}
-
-bool UVictoryBPFunctionLibrary::VictoryBindActionKey(FVictoryInput NewBinding, bool bIsAllowDuplication)
-{
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	if (!Settings) return false;
-
-	TArray<FInputActionKeyMapping>& Actions = Settings->ActionMappings;
-
-	//~~~
-	bool Bind = false;
-	if (bIsAllowDuplication == false)
-	{
-		for (FInputActionKeyMapping& Each : Actions)
-		{
-			//Search by original
-			if (Each.ActionName.ToString() == NewBinding.ActionName &&
-				Each.Key == NewBinding.Key
-				) {
-				// Is is already there
-				Bind = true;
-				break;
-			}
-		}
-	}
-
-	if (Bind == false)
-	{
-		FInputActionKeyMapping NewInputActionKeyMapping;
-		UVictoryBPFunctionLibrary::UpdateActionMapping(NewInputActionKeyMapping, NewBinding);
-		Actions.Add(NewInputActionKeyMapping);
-
-		//SAVES TO DISK
-		const_cast<UInputSettings*>(Settings)->SaveKeyMappings();
-
-		//REBUILDS INPUT, creates modified config in Saved/Config/Windows/Input.ini
-		for (TObjectIterator<UPlayerInput> It; It; ++It)
-		{
-			It->ForceRebuildingKeyMaps(true);
-		}
-
-		Bind = true;
-	}
-
-	return Bind;
 }
 
 void UVictoryBPFunctionLibrary::GetAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, TArray<UUserWidget*>& FoundWidgets,bool TopLevelOnly)
@@ -1528,7 +1352,7 @@ bool UVictoryBPFunctionLibrary::IsWidgetOfClassInViewport(UObject* WorldContextO
 	return false;
 }
  
-void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FString MapName,bool bNotifyPlayers)
+void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FString MapName,bool bSkipNotifyPlayers)
 { 
 	if(!WorldContextObject) return;
 	 
@@ -1536,7 +1360,7 @@ void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FStrin
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
-	World->ServerTravel(MapName,false,bNotifyPlayers); //abs //notify players
+	World->ServerTravel(MapName,false,bSkipNotifyPlayers); //abs //notify players
 }
 APlayerStart* UVictoryBPFunctionLibrary::GetPlayerStart(UObject* WorldContextObject,FString PlayerStartName)
 {
@@ -1981,7 +1805,7 @@ int32 UVictoryBPFunctionLibrary::GetPlayerUniqueNetID()
 	if(!ThePC->PlayerState) return -1;
 	//~~~~~~~~~~~~~~~~~~~
 	
-	return ThePC->PlayerState->PlayerId;
+	return ThePC->PlayerState->GetPlayerId();
 }
 UObject* UVictoryBPFunctionLibrary::CreateObject(UObject* WorldContextObject,UClass* TheObjectClass)
 {
@@ -2049,7 +1873,7 @@ AActor* UVictoryBPFunctionLibrary::SpawnActorIntoLevel(UObject* WorldContextObje
 	//Get Level from Name!
 	ULevel* FoundLevel = NULL;
 	
-	for(const ULevelStreaming* EachLevel : World->StreamingLevels)
+	for(const ULevelStreaming* EachLevel : World->GetStreamingLevels())
 	{
 		if( ! EachLevel) continue;
 		//~~~~~~~~~~~~~~~~
@@ -2088,7 +1912,7 @@ void UVictoryBPFunctionLibrary::GetNamesOfLoadedLevels(UObject* WorldContextObje
 	//Get Level from Name!
 	ULevel* FoundLevel = NULL;
 	
-	for(const ULevelStreaming* EachLevel : World->StreamingLevels)
+	for(const ULevelStreaming* EachLevel : World->GetStreamingLevels())
 	{
 		if( ! EachLevel) continue;
 		//~~~~~~~~~~~~~~~~
@@ -2481,7 +2305,7 @@ bool UVictoryBPFunctionLibrary::PlayerState_GetPlayerID(APlayerController* ThePC
 	
 	if(!ThePC->PlayerState) return false;
 	
-	PlayerID = ThePC->PlayerState->PlayerId;
+	PlayerID = ThePC->PlayerState->GetPlayerId();
 	
 	return true;
 }
@@ -2516,7 +2340,7 @@ void UVictoryBPFunctionLibrary::OperatingSystem__GetCurrentPlatform(
 	Android = 				PLATFORM_ANDROID;
 	Android_ARM  	=		PLATFORM_ANDROID_ARM;
 	Android_Vulkan	= 		PLATFORM_ANDROID_VULKAN;
-	HTML5 = 					PLATFORM_HTML5;
+	HTML5 = false;//PLATFORM_HTML5;
 	 
 	Apple =	 			PLATFORM_APPLE;
 }
@@ -3186,7 +3010,8 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 	FString SaveDirectory, 
 	FString JoyfulFileName, 
 	FString SaveText,
-	bool AllowOverWriting
+	bool AllowOverWriting,
+	bool AllowAppend
 ){
 	if(!FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*SaveDirectory))
 	{
@@ -3210,9 +3035,15 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 		}
 	}
 	
+	if (AllowAppend)
+	{
+		SaveText += "\n";
+		return FFileHelper::SaveStringToFile(SaveText, * SaveDirectory,
+				FFileHelper::EEncodingOptions::AutoDetect,&IFileManager::Get(), EFileWrite::FILEWRITE_Append);
+	}
 	return FFileHelper::SaveStringToFile(SaveText, * SaveDirectory);
 }
-bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting)  
+bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting, bool AllowAppend)  
 {
 	//Dir Exists?
 	if ( !VCreateDirectory(SaveDirectory))
@@ -3244,7 +3075,12 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirect
 		FinalStr += LINE_TERMINATOR;
 	}
 	
-
+	if (AllowAppend)
+	{
+	    FinalStr += "\n";
+		return FFileHelper::SaveStringToFile(FinalStr, * SaveDirectory,
+				FFileHelper::EEncodingOptions::AutoDetect,&IFileManager::Get(), EFileWrite::FILEWRITE_Append);
+	}
 
 	return FFileHelper::SaveStringToFile(FinalStr, * SaveDirectory);
 	
@@ -3443,7 +3279,6 @@ AActor*  UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestBone(
 	//Simple Trace First
 	FCollisionQueryParams TraceParams(FName(TEXT("VictoryBPTrace::CharacterMeshTrace")), true, HitActor);
 	TraceParams.bTraceComplex = true;
-	TraceParams.bTraceAsyncScene = true;
 	TraceParams.bReturnPhysicalMaterial = false;
 	TraceParams.AddIgnoredActor(TraceOwner);
 	
@@ -3477,6 +3312,7 @@ AActor*  UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestBone(
 		TraceEnd, 
 		true, 
 		false, 
+		false,
 		OutImpactPoint, 
 		OutImpactNormal,
 		ClosestBoneName,
@@ -3514,7 +3350,6 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	//Simple Trace First
 	FCollisionQueryParams TraceParams(FName(TEXT("VictoryBPTrace::CharacterMeshSocketTrace")), true, HitActor);
 	TraceParams.bTraceComplex = true;
-	TraceParams.bTraceAsyncScene = true;
 	TraceParams.bReturnPhysicalMaterial = false;
 	TraceParams.AddIgnoredActor(TraceOwner);
 	
@@ -3549,6 +3384,7 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 		TraceEnd, 
 		true, 
 		false, 
+		false,
 		OutImpactPoint, 
 		OutImpactNormal,
 		BoneName,
@@ -4277,7 +4113,7 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromDDSFile(const FString& 
 			/* Create transient texture */
 			Texture = UTexture2D::CreateTransient( DDSLoadHelper.DDSHeader->dwWidth, DDSLoadHelper.DDSHeader->dwHeight, Format );
 			if(!Texture) return NULL;
-			Texture->PlatformData->NumSlices = 1;
+			//Texture->PlatformData->NumSlices = 1;
 			Texture->NeverStream = true;
 		
 			/* Get pointer to actual data */
@@ -4420,7 +4256,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile(const FStr
 	//Create T2D!
 	if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
 	{ 
-		const TArray<uint8>* UncompressedBGRA = NULL;
+		TArray<uint8> UncompressedBGRA;
 		if (ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, UncompressedBGRA))
 		{
 			LoadedT2D = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
@@ -4435,7 +4271,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile(const FStr
 			 
 			//Copy!
 			void* TextureData = LoadedT2D->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-			FMemory::Memcpy(TextureData, UncompressedBGRA->GetData(), UncompressedBGRA->Num());
+			FMemory::Memcpy(TextureData, UncompressedBGRA.GetData(), UncompressedBGRA.Num());
 			LoadedT2D->PlatformData->Mips[0].BulkData.Unlock();
 
 			//Update!
@@ -4466,7 +4302,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile_Pixels(con
 	//Create T2D!
 	if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
 	{  
-		const TArray<uint8>* UncompressedRGBA = NULL;
+		TArray<uint8> UncompressedRGBA ;
 		if (ImageWrapper->GetRaw(ERGBFormat::RGBA, 8, UncompressedRGBA))
 		{
 			LoadedT2D = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_R8G8B8A8);
@@ -4479,7 +4315,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile_Pixels(con
 			Width = ImageWrapper->GetWidth();
 			Height = ImageWrapper->GetHeight();
 			
-			const TArray<uint8>& ByteArray = *UncompressedRGBA;
+			const TArray<uint8>& ByteArray = UncompressedRGBA;
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			
 			for(int32 v = 0; v < ByteArray.Num(); v+=4) 
@@ -4502,7 +4338,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile_Pixels(con
 			   
 			//Copy!
 			void* TextureData = LoadedT2D->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-			FMemory::Memcpy(TextureData, UncompressedRGBA->GetData(), UncompressedRGBA->Num());
+			FMemory::Memcpy(TextureData, UncompressedRGBA.GetData(), UncompressedRGBA.Num());
 			LoadedT2D->PlatformData->Mips[0].BulkData.Unlock();
 
 			//Update!
@@ -4652,8 +4488,22 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X
 	{
 		return false;
 	}
-	 
+	
+	
+	//~~~
+	if(T2D->CompressionSettings != TC_VectorDisplacementmap)
+	{
+		#if WITH_EDITOR
+			FMessageLog("PIE").Error(FText::Format(LOCTEXT("Victory_GetPixelFromT2D", "UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D >> Texture Compression must be VectorDisplacementmap <3 Rama: {0}'"), FText::FromString(T2D->GetName())));
+		#endif // WITH_EDITOR
+		return false;
+	}
+	
+
+	//~~~
+	
 	T2D->SRGB = false;
+	
 	T2D->CompressionSettings = TC_VectorDisplacementmap;
 	
 	//Update settings
@@ -4663,6 +4513,15 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X
 	int32 TextureWidth = MipsMap.SizeX;
 	int32 TextureHeight = MipsMap.SizeY;
 	 
+	//Safety check!
+	if (X >= TextureWidth || Y >= TextureHeight)
+	{
+		#if WITH_EDITOR
+			FMessageLog("PIE").Error(FText::Format(LOCTEXT("Victory_GetPixelFromT2D", "UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D >> X or Y is outside of texture bounds! <3 Rama: {0}'"), FText::FromString(FString::FromInt(TextureWidth) + " x " + FString::FromInt(TextureHeight) )));
+		#endif // WITH_EDITOR
+		return false;
+	}
+	
 	FByteBulkData* RawImageData 	= &MipsMap.BulkData;
 	
 	if(!RawImageData) 
@@ -4670,20 +4529,104 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X
 		return false;
 	}
 	
-	FColor* RawColorArray = static_cast<FColor*>(RawImageData->Lock(LOCK_READ_ONLY));
-	
-	//Safety check!
-	if (X >= TextureWidth || Y >= TextureHeight)
+	int32 TotalCount = RawImageData->GetElementCount();
+	if(TotalCount < 1)
 	{
 		return false;
 	}
-	   
+	 
+	uint8* RawByteArray = (uint8*)RawImageData->Lock(LOCK_READ_ONLY);
+			
+	//TC_VectorDisplacementmap	UMETA(DisplayName="VectorDisplacementmap (RGBA8)"),
+	//! 4 because includes alpha <3 Rama
+	/*
+	for(int32 v = 0; v < TextureWidth * TextureHeight * RawImageData->GetElementSize() * 4; v++)
+	{
+		DebugString += FString::FromInt(RawByteArray[v]) + " ";
+	}
+	*/
+ 
+	//Texture.cpp
+	/*
+	else if (FormatSettings.CompressionSettings == TC_VectorDisplacementmap)
+	{
+		TextureFormatName = NameBGRA8;
+	}
+	*/
+	
 	//Get!, converting FColor to FLinearColor 
-	PixelColor = RawColorArray[Y * TextureWidth + X];
-  
+	FColor ByteColor;
+	ByteColor.B = RawByteArray[Y * TextureWidth * 4 + (X * 4) ];
+	ByteColor.G = RawByteArray[Y * TextureWidth * 4 + (X * 4) + 1];
+	ByteColor.R = RawByteArray[Y * TextureWidth * 4 + (X * 4) + 2];
+	ByteColor.A = RawByteArray[Y * TextureWidth * 4 + (X * 4) + 3];
+	
+	//Set!
+	PixelColor = ByteColor.ReinterpretAsLinear();
+	
+	RawImageData->Unlock();
+	
+	return true;
+}
+
+
+bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
+{
+	
+	if(!T2D) 
+	{
+		return false;
+	}
+	
+	if(T2D->CompressionSettings != TC_VectorDisplacementmap)
+	{
+		#if WITH_EDITOR
+			FMessageLog("PIE").Error(FText::Format(LOCTEXT("Victory_GetPixelFromT2D", "UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D >> Texture Compression must be VectorDisplacementmap <3 Rama: {0}'"), FText::FromString(T2D->GetName())));
+		#endif // WITH_EDITOR
+		return false;
+	}
+	
+	//To prevent overflow in BP if used in a loop
+	PixelArray.Empty();
+	
+	T2D->SRGB = false;
+	T2D->CompressionSettings = TC_VectorDisplacementmap;
+	
+	//Update settings
+	T2D->UpdateResource();
+	 
+	FTexture2DMipMap& MyMipMap 	= T2D->PlatformData->Mips[0];
+	TextureWidth = MyMipMap.SizeX;
+	TextureHeight = MyMipMap.SizeY;
+	 
+	FByteBulkData* RawImageData 	= &MyMipMap.BulkData;
+	
+	if(!RawImageData) 
+	{
+		return false;
+	}
+	
+	uint8* RawByteArray = (uint8*)RawImageData->Lock(LOCK_READ_ONLY);
+	
+	
+	for(int32 y = 0; y < TextureHeight; y++)   
+	{
+		for(int32 x = 0; x < TextureWidth; x++)
+		{
+			FColor ByteColor;
+			ByteColor.B = RawByteArray[y * TextureWidth * 4 + (x * 4) ];
+			ByteColor.G = RawByteArray[y * TextureWidth * 4 + (x * 4) + 1];
+			ByteColor.R = RawByteArray[y * TextureWidth * 4 + (x * 4) + 2];
+			ByteColor.A = RawByteArray[y * TextureWidth * 4 + (x * 4) + 3];
+			
+			PixelArray.Add(ByteColor.ReinterpretAsLinear());
+		}
+	}
+	  
 	RawImageData->Unlock();
 	return true;
 }
+
 bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2DDynamic(UTexture2DDynamic* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
 {
 	if(!T2D) 
@@ -4739,50 +4682,8 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2DDynamic(UTexture2DD
 	  
 	RawImageData->Unlock();
 	*/
-	
-	return true;
 }
 
-bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
-{
-	if(!T2D) 
-	{
-		return false;
-	}
-	
-	//To prevent overflow in BP if used in a loop
-	PixelArray.Empty();
-	
-	T2D->SRGB = false;
-	T2D->CompressionSettings = TC_VectorDisplacementmap;
-	
-	//Update settings
-	T2D->UpdateResource();
-	 
-	FTexture2DMipMap& MyMipMap 	= T2D->PlatformData->Mips[0];
-	TextureWidth = MyMipMap.SizeX;
-	TextureHeight = MyMipMap.SizeY;
-	 
-	FByteBulkData* RawImageData 	= &MyMipMap.BulkData;
-	
-	if(!RawImageData) 
-	{
-		return false;
-	}
-	
-	FColor* RawColorArray = static_cast<FColor*>(RawImageData->Lock(LOCK_READ_ONLY));
-	
-	for(int32 x = 0; x < TextureWidth; x++)
-	{
-		for(int32 y = 0; y < TextureHeight; y++)   
-		{
-			PixelArray.Add(RawColorArray[x * TextureWidth + y]); 
-		}
-	}
-	  
-	RawImageData->Unlock();
-	return true;
-}
 
 class UAudioComponent* UVictoryBPFunctionLibrary::PlaySoundAttachedFromFile(const FString& FilePath, class USceneComponent* AttachToComponent, FName AttachPointName, FVector Location, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed, float VolumeMultiplier, float PitchMultiplier, float StartTime, class USoundAttenuation* AttenuationSettings)
 {	
@@ -4857,7 +4758,7 @@ int32 UVictoryBPFunctionLibrary::fillSoundWaveInfo(class USoundWave* sw, TArray<
     sw->NumChannels = info.NumChannels;
     sw->Duration = info.Duration;
     sw->RawPCMDataSize = info.SampleDataSize;
-    sw->SampleRate = info.SampleRate;
+    sw->SetSampleRate(info.SampleRate);
 
     return 0;
 }
@@ -4865,7 +4766,7 @@ int32 UVictoryBPFunctionLibrary::fillSoundWaveInfo(class USoundWave* sw, TArray<
       
 int32 UVictoryBPFunctionLibrary::findSource(class USoundWave* sw, class FSoundSource* out_audioSource)
 {
-	FAudioDevice* device = GEngine ? GEngine->GetMainAudioDevice() : NULL; //gently ask for the audio device
+	FAudioDevice* device = GEngine ? GEngine->GetMainAudioDeviceRaw() : NULL; //gently ask for the audio device
 
 	FActiveSound* activeSound;
 	FSoundSource* audioSource;
@@ -4884,7 +4785,7 @@ int32 UVictoryBPFunctionLibrary::findSource(class USoundWave* sw, class FSoundSo
 		for (auto activeSoundIt(tmpActualSounds.CreateIterator()); activeSoundIt; ++activeSoundIt)
 		{
 			activeSound = *activeSoundIt;
-			for (auto WaveInstanceIt(activeSound->WaveInstances.CreateIterator()); WaveInstanceIt; ++WaveInstanceIt)
+			for (auto WaveInstanceIt(activeSound->GetWaveInstances().CreateConstIterator()); WaveInstanceIt; ++WaveInstanceIt)
 			{
 				sw_instance = WaveInstanceIt.Value();
 				if (sw_instance->WaveData->CompressedDataGuid == sw->CompressedDataGuid)
@@ -4913,7 +4814,7 @@ bool UVictoryBPFunctionLibrary::Array_IsValidIndex(const TArray<int32>& TargetAr
     return false;
 }
  
-bool UVictoryBPFunctionLibrary::GenericArray_IsValidIndex(void* TargetArray, const UArrayProperty* ArrayProp, int32 Index)
+bool UVictoryBPFunctionLibrary::GenericArray_IsValidIndex(void* TargetArray, const FArrayProperty* ArrayProp, int32 Index)
 { 
 	bool bResult = false;
 
@@ -5121,7 +5022,7 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const F
 
 	if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(CompressedData.GetData(), CompressedData.Num()))
 	{ 
-		const TArray<uint8>* UncompressedRGBA = nullptr;
+		TArray<uint8> UncompressedRGBA;
 		
 		if (ImageWrapper->GetRaw(ERGBFormat::RGBA, 8, UncompressedRGBA))
 		{
@@ -5135,7 +5036,7 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const F
 				OutHeight = ImageWrapper->GetHeight();
 
 				void* TextureData = Texture->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-				FMemory::Memcpy(TextureData, UncompressedRGBA->GetData(), UncompressedRGBA->Num());
+				FMemory::Memcpy(TextureData, UncompressedRGBA.GetData(), UncompressedRGBA.Num());
 				Texture->PlatformData->Mips[0].BulkData.Unlock();
 				Texture->UpdateResource();
 			}
@@ -5320,19 +5221,19 @@ void UVictoryBPFunctionLibrary::SetGenericTeamId(AActor* Target, uint8 NewTeamId
 	}
 }
 
-FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelInstance)
+FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingDynamic* LevelInstance)
 {
 	PackageName = LevelInstance->GetWorldAssetPackageFName();
 	PackageNameToLoad = LevelInstance->PackageNameToLoad;
 	Location = LevelInstance->LevelTransform.GetLocation();
 	Rotation = LevelInstance->LevelTransform.GetRotation().Rotator();
-	bShouldBeLoaded = LevelInstance->bShouldBeLoaded;
-	bShouldBeVisible = LevelInstance->bShouldBeVisible;
+	bShouldBeLoaded = LevelInstance->HasLoadedLevel();
+	bShouldBeVisible = LevelInstance->GetShouldBeVisibleFlag();
 	bShouldBlockOnLoad = LevelInstance->bShouldBlockOnLoad;
-	LODIndex = LevelInstance->LevelLODIndex;
+	LODIndex = LevelInstance->GetLevelLODIndex();
 };
 
-FLevelStreamInstanceInfo UVictoryBPFunctionLibrary::GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance)
+FLevelStreamInstanceInfo UVictoryBPFunctionLibrary::GetLevelInstanceInfo(ULevelStreamingDynamic* LevelInstance)
 {
 	return FLevelStreamInstanceInfo(LevelInstance);
 }
@@ -5347,7 +5248,7 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 	{
 		bool bAlreadyExists = false;
 
-		for (auto StreamingLevel : World->StreamingLevels)
+		for (auto StreamingLevel : World->GetStreamingLevels())
 		{
 			if (StreamingLevel->GetWorldAssetPackageFName() == LevelInstanceInfo.PackageName)
 			{
@@ -5371,11 +5272,11 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 			GEngine->DelayGarbageCollection();
 
 			// Setup streaming level object that will load specified map
-			ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, nullptr);
+			ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, ULevelStreamingDynamic::StaticClass(), NAME_None, RF_Transient, nullptr);
 			StreamingLevel->SetWorldAssetByPackageName(PackageName);
 			StreamingLevel->LevelColor = FColor::MakeRandomColor();
-			StreamingLevel->bShouldBeLoaded = LevelInstanceInfo.bShouldBeLoaded;
-			StreamingLevel->bShouldBeVisible = LevelInstanceInfo.bShouldBeVisible;
+			StreamingLevel->SetShouldBeLoaded(LevelInstanceInfo.bShouldBeLoaded);
+			StreamingLevel->SetShouldBeVisible(LevelInstanceInfo.bShouldBeVisible);
 			StreamingLevel->bShouldBlockOnLoad = LevelInstanceInfo.bShouldBlockOnLoad;
 			StreamingLevel->bInitiallyLoaded = true;
 			StreamingLevel->bInitiallyVisible = true;
@@ -5387,7 +5288,7 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 			StreamingLevel->PackageNameToLoad = LevelInstanceInfo.PackageNameToLoad;
 
 			// Add the new level to world.
-			World->StreamingLevels.Add(StreamingLevel);
+			World->AddStreamingLevel(StreamingLevel);
 
 			World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
 		}
@@ -5426,7 +5327,7 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 #endif
 
 		// Find the level to unload
-		for (auto StreamingLevel : World->StreamingLevels)
+		for (auto StreamingLevel : World->GetStreamingLevels())
 		{
 
 			FName LoadedPackageName = StreamingLevel->GetWorldAssetPackageFName();
@@ -5440,10 +5341,10 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 			if(PackageNameToCheck == LoadedPackageName)
 			{
 				// This unload the level
-				StreamingLevel->bShouldBeLoaded = false;
-				StreamingLevel->bShouldBeVisible = false;
+				StreamingLevel->SetShouldBeLoaded(false);
+				StreamingLevel->SetShouldBeVisible(false);
 				// This removes the level from the streaming level list
-				StreamingLevel->bIsRequestingUnloadAndRemoval = true;
+				StreamingLevel->SetIsRequestingUnloadAndRemoval(true);
 				// Force a refresh of the world
 				World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
 				break;
@@ -5452,49 +5353,49 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 	}
 }
 
-bool UVictoryBPFunctionLibrary::GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr)
+bool UVictoryBPFunctionLibrary::GenericArray_SortCompare(const FProperty* LeftProperty, void* LeftValuePtr, const FProperty* RightProperty, void* RightValuePtr)
 {
 	bool bResult = false;
 
-	if (const UNumericProperty *LeftNumericProperty = Cast<const UNumericProperty>(LeftProperty))
+	if (const FNumericProperty *LeftNumericProperty = Cast<const FNumericProperty>(LeftProperty))
 	{
 		if (LeftNumericProperty->IsFloatingPoint())
 		{
-			bResult = (LeftNumericProperty->GetFloatingPointPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetFloatingPointPropertyValue(RightValuePtr));
+			bResult = (LeftNumericProperty->GetFloatingPointPropertyValue(LeftValuePtr) < Cast<const FNumericProperty>(RightProperty)->GetFloatingPointPropertyValue(RightValuePtr));
 		}
 		else if (LeftNumericProperty->IsInteger())
 		{
-			bResult = (LeftNumericProperty->GetSignedIntPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetSignedIntPropertyValue(RightValuePtr));
+			bResult = (LeftNumericProperty->GetSignedIntPropertyValue(LeftValuePtr) < Cast<const FNumericProperty>(RightProperty)->GetSignedIntPropertyValue(RightValuePtr));
 		}
 	}
-	else if (const UBoolProperty* LeftBoolProperty = Cast<const UBoolProperty>(LeftProperty))
+	else if (const FBoolProperty* LeftBoolProperty = Cast<const FBoolProperty>(LeftProperty))
 	{
-		bResult = (!LeftBoolProperty->GetPropertyValue(LeftValuePtr) && Cast<const UBoolProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+		bResult = (!LeftBoolProperty->GetPropertyValue(LeftValuePtr) && Cast<const FBoolProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
 	}
-	else if (const UNameProperty* LeftNameProperty = Cast<const UNameProperty>(LeftProperty))
+	else if (const FNameProperty* LeftNameProperty = Cast<const FNameProperty>(LeftProperty))
 	{
-		bResult = (LeftNameProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UNameProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+		bResult = (LeftNameProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const FNameProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
 	}
-	else if (const UStrProperty* LeftStringProperty = Cast<const UStrProperty>(LeftProperty))
+	else if (const FStrProperty* LeftStringProperty = Cast<const FStrProperty>(LeftProperty))
 	{
-		bResult = (LeftStringProperty->GetPropertyValue(LeftValuePtr) < Cast<const UStrProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+		bResult = (LeftStringProperty->GetPropertyValue(LeftValuePtr) < Cast<const FStrProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
 	}
-	else if (const UTextProperty* LeftTextProperty = Cast<const UTextProperty>(LeftProperty))
+	else if (const FTextProperty* LeftTextProperty = Cast<const FTextProperty>(LeftProperty))
 	{
-		bResult = (LeftTextProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UTextProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+		bResult = (LeftTextProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const FTextProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
 	}
 
 	return bResult;
 }
 
-void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArrayProperty* ArrayProp, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
+void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const FArrayProperty* ArrayProp, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
 {
 	if (TargetArray)
 	{
 		FScriptArrayHelper ArrayHelper(ArrayProp, TargetArray);
 		const int32 LastIndex = ArrayHelper.Num();
 
-		if (const UObjectProperty* ObjectProperty = Cast<const UObjectProperty>(ArrayProp->Inner))
+		if (const FObjectProperty* ObjectProperty = Cast<const FObjectProperty>(ArrayProp->Inner))
 		{
 			for (int32 i = 0; i < LastIndex; ++i)
 			{
@@ -5503,8 +5404,8 @@ void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArra
 					UObject* LeftObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j));
 					UObject* RightObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j + 1));
 
-					UProperty* LeftProperty = FindField<UProperty>(LeftObject->GetClass(), VariableName);
-					UProperty* RightProperty = FindField<UProperty>(RightObject->GetClass(), VariableName);
+					FProperty* LeftProperty = FindField<FProperty>(LeftObject->GetClass(), VariableName);
+					FProperty* RightProperty = FindField<FProperty>(RightObject->GetClass(), VariableName);
 						
 					if (LeftProperty && RightProperty)
 					{
@@ -5521,11 +5422,11 @@ void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArra
 		}
 		else
 		{
-			UProperty* Property = nullptr;
+			FProperty* Property = nullptr;
 
-			if (const UStructProperty* StructProperty = Cast<const UStructProperty>(ArrayProp->Inner))
+			if (const FStructProperty* StructProperty = Cast<const FStructProperty>(ArrayProp->Inner))
 			{
-				Property = FindField<UProperty>(StructProperty->Struct, VariableName);
+				Property = FindField<FProperty>(StructProperty->Struct, VariableName);
 			}
 			else
 			{

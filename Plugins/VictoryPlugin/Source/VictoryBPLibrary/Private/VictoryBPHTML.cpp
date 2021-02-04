@@ -4,6 +4,10 @@
 #include "VictoryBPLibraryPrivatePCH.h"
 #include "VictoryBPHTML.h"
 
+
+//! Someone should please integrate the HTML5 plugin with this code
+
+/*
 #if PLATFORM_HTML5
 	#include "SDL_opengl.h"
 
@@ -12,16 +16,23 @@
 	#include "emscripten.h"
 	#include "html5.h"
 #endif
+*/
 
+/*
 bool UVictoryBPHTML::IsHTML()
 { 
+	
 	#if PLATFORM_HTML5
 	return true;
 	#else
 	return false;
-	#endif //HTML
+	#endif 
+	
+	return false;
 }
+*/
 
+/*
 void UVictoryBPHTML::VictoryHTML5_SetCursorVisible(bool MakeVisible)
 { 
 	if(MakeVisible)
@@ -42,4 +53,6 @@ void UVictoryBPHTML::VictoryHTML5_SetCursorVisible(bool MakeVisible)
 		} 
 		#endif
 	}
+
 }
+*/

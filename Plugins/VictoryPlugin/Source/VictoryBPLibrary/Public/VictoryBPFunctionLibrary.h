@@ -30,6 +30,8 @@
 #include "Developer/TargetPlatform/Public/Interfaces/IAudioFormat.h"
 #include "VorbisAudioInfo.h"
 
+#include "Runtime/Engine/Classes/Engine/LevelStreamingDynamic.h"
+
 //Texture2D
 //#include "Engine/Texture2D.h"
 #include "DDSLoader.h"
@@ -76,7 +78,7 @@ enum class EVictoryHMDDevice : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FVictoryInput : public FTableRowBase
+struct FVictoryInput
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -127,7 +129,7 @@ struct FVictoryInput : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FVictoryInputAxis : public FTableRowBase
+struct FVictoryInputAxis
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -207,7 +209,7 @@ struct FLevelStreamInstanceInfo
 
 	FLevelStreamInstanceInfo() {}
 
-	FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelInstance);
+	FLevelStreamInstanceInfo(ULevelStreamingDynamic* LevelInstance);
 
 	FString ToString() const
 	{
@@ -269,7 +271,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	* @param bCanStrafe - Set focus related flag: bAllowStrafe
 	* @return Whether the Pawn's AI Controller is valid and goal can be pathed to
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|AI")
+	/*UFUNCTION(BlueprintCallable, Category = "Victory BP Library|AI")
 	static EPathFollowingRequestResult::Type Victory_AI_MoveToWithFilter(
 		APawn* Pawn,
 		const FVector& Dest,
@@ -278,7 +280,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		bool bProjectDestinationToNavigation = false,
 		bool bStopOnOverlap = false,
 		bool bCanStrafe = false
-	);
+	);*/
 
 	//~~~~~~~~~~~~~~~~
 	// 	GPU  <3 Rama
@@ -394,7 +396,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		{
 			return nullptr;
 		}
-		NewRenderTarget2D->ClearColor = FLinearColor::White;
+		NewRenderTarget2D->ClearColor = ClearColor;
 		NewRenderTarget2D->TargetGamma = Gamma;
 		NewRenderTarget2D->InitAutoFormat(Width, Height);
 		return NewRenderTarget2D;
@@ -417,7 +419,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Physics", meta=(Keywords="APEX Piece fracture damage PhysX Physics"))
 	static bool VictoryDestructible_DestroyChunk(UDestructibleComponent* DestructibleComp, int32 HitItem);
 
-
+ 
 	//~~~~~~~~~~
 	// 	Joy ISM
 	//~~~~~~~~~~
@@ -446,16 +448,20 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static void SaveGameObject_GetAllSaveSlotFileNames(TArray<FString>& FileNames);
 
+	/** Obtain the last SaveGame file that was saved  using the Blueprint Save Game system. */
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
+	static void SaveGameObject_GetMostRecentSaveSlotFileName(FString& FileName, bool& bFound);
+
 	/** Returns false if the new file could not be created. The folder path must be absolute, such as C:\Users\Self\Documents\YourProject\MyPics. You can use my other Paths nodes to easily get absolute paths related to your project! <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Screenshots", meta=(Keywords="High resolution"))
 	static bool ScreenShots_Rename_Move_Most_Recent(FString& OriginalFileName, FString NewName, FString NewAbsoluteFolderPath, bool HighResolution=true);
 
 	//~~~~ Key Re Binding ! ~~~~
 
-	//	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Axis Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryGetAllAxisAndActionMappingsForKey(FKey Key, TArray<FVictoryInput>& ActionBindings, TArray<FVictoryInputAxis>& AxisBindings);
 
+	//	Axis Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static FVictoryInputAxis VictoryGetVictoryInputAxis(const FKeyEvent& KeyEvent);
 
@@ -469,26 +475,14 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryReBindAxisKey(FVictoryInputAxis Original, FVictoryInputAxis NewBinding);
 
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryEmptyAllAxisKeyBindings();
-
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryBindAxisKeys(const TArray<FVictoryInputAxis>& NewBindings);
-
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryBindAxisKey(FVictoryInputAxis NewBinding, bool bIsAllowDuplication = false);
-
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryFindAction(FVictoryInput ActionToFind, FVictoryInput &VictoryInputOut);
-
 	static FORCEINLINE void UpdateAxisMapping(FInputAxisKeyMapping& Destination, const FVictoryInputAxis& VictoryInputBind)
 	{
 		Destination.Key = VictoryInputBind.Key;
 		Destination.Scale = VictoryInputBind.Scale;
-		Destination.AxisName = FName(*VictoryInputBind.AxisName);
 	}
 
-	//	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Action Mapping
+
+	//	Action Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static FVictoryInput VictoryGetVictoryInput(const FKeyEvent& KeyEvent);
 
@@ -499,18 +493,6 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		Destination.bCtrl = VictoryInputBind.bCtrl;
 		Destination.bAlt = VictoryInputBind.bAlt;
 		Destination.bCmd = VictoryInputBind.bCmd;
-		Destination.ActionName = FName(*VictoryInputBind.ActionName);
-	}
-
-	static FORCEINLINE void UpdateVictoryActionMapping(FVictoryInput& VictoryInput, const FInputActionKeyMapping& InputActionKeyMapping)
-	{
-		VictoryInput.Key = InputActionKeyMapping.Key;
-		VictoryInput.bShift = InputActionKeyMapping.bShift;
-		VictoryInput.bCtrl = InputActionKeyMapping.bCtrl;
-		VictoryInput.bAlt = InputActionKeyMapping.bAlt;
-		VictoryInput.bCmd = InputActionKeyMapping.bCmd;
-		VictoryInput.ActionName = InputActionKeyMapping.ActionName.ToString();
-		VictoryInput.KeyAsString = InputActionKeyMapping.Key.ToString();
 	}
 
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
@@ -519,15 +501,6 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** You can leave the AsString field blank :) Returns false if the key could not be found as an existing mapping!  Enjoy! <3  Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryReBindActionKey(FVictoryInput Original, FVictoryInput NewBinding);
-
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryEmptyAllActionKeyBindings();
-
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryBindActionKeys(const TArray<FVictoryInput>& NewBindings);
-
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
-	static bool VictoryBindActionKey(FVictoryInput NewBinding, bool bIsAllowDuplication = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryRemoveActionKeyBind(FVictoryInput ToRemove);
@@ -701,7 +674,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	/** Server Travel! This is an async load level process which allows you to put up a UMG widget while the level loading occurs! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
-	static void ServerTravel(UObject* WorldContextObject,FString MapName, bool bNotifyPlayers=true);
+	static void ServerTravel(UObject* WorldContextObject,FString MapName, bool bSkipNotifyPlayers=false);
 
 	/** Get a Player Start by Name! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
@@ -1221,11 +1194,11 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	/** Saves text to filename of your choosing, make sure include whichever file extension you want in the filename, ex: SelfNotes.txt . Make sure to include the entire file path in the save directory, ex: C:\MyGameDir\BPSavedTextFiles */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|File IO")
-	static bool FileIO__SaveStringTextToFile(FString SaveDirectory, FString JoyfulFileName, FString SaveText, bool AllowOverWriting = false);
+	static bool FileIO__SaveStringTextToFile(FString SaveDirectory, FString JoyfulFileName, FString SaveText, bool AllowOverWriting = false, bool AllowAppend = false);
 
 	/** Saves multiple Strings to filename of your choosing, with each string on its own line! Make sure include whichever file extension you want in the filename, ex: SelfNotes.txt . Make sure to include the entire file path in the save directory, ex: C:\MyGameDir\BPSavedTextFiles */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|File IO")
-	static bool FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting = false);
+	static bool FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting = false, bool AllowAppend = false);
 
 
 	/** Obtain an Array of Actors Rendered Recently. You can specifiy what qualifies as "Recent" in seconds. */
@@ -1548,13 +1521,13 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static bool Victory_SavePixels(const FString& FullFilePath,int32 Width, int32 Height, const TArray<FLinearColor>& ImagePixels, bool SaveAsBMP, bool sRGB, FString& ErrorString);
 
 	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))//, DeprecatedFunction, DeprecationMessage="This function will not work until I figure out how to update it to 4.25, if you need it urgently, please post in my ue4 forum thread for this plugin"))
 	static bool Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X, int32 Y, FLinearColor& PixelColor);
 
 	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))//, DeprecatedFunction, DeprecationMessage="This function will not work until I figure out how to update it to 4.25, if you need it urgently, please post in my ue4 forum thread for this plugin"))
 	static bool Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray);
-
+	
 	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
 	//UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static bool Victory_GetPixelsArrayFromT2DDynamic(UTexture2DDynamic* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray);
@@ -1748,20 +1721,20 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	UFUNCTION(Category="Victory BP Library|Utilities|Array", BlueprintPure, CustomThunk, meta=(DisplayName = "Valid Index", CompactNodeTitle = "VALID INDEX", ArrayParm = "TargetArray"))
 	static bool Array_IsValidIndex(const TArray<int32>& TargetArray, int32 Index);
 
-	static bool GenericArray_IsValidIndex(void* TargetArray, const UArrayProperty* ArrayProp, int32 Index);
+	static bool GenericArray_IsValidIndex(void* TargetArray, const FArrayProperty* ArrayProp, int32 Index);
 
 	DECLARE_FUNCTION(execArray_IsValidIndex)
 	{
 		Stack.MostRecentProperty = nullptr;
-		Stack.StepCompiledIn<UArrayProperty>(NULL);
+		Stack.StepCompiledIn<FArrayProperty>(NULL);
 		void* ArrayAddr = Stack.MostRecentPropertyAddress;
-		UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Stack.MostRecentProperty);
+		FArrayProperty* ArrayProperty = Cast<FArrayProperty>(Stack.MostRecentProperty);
 		if (!ArrayProperty)
 		{
 			Stack.bArrayContextFailed = true;
 			return;
 		}
-		P_GET_PROPERTY(UIntProperty, Index);
+		P_GET_PROPERTY(FIntProperty, Index);
 		P_FINISH;
 
 		bool WasValid = GenericArray_IsValidIndex(ArrayAddr, ArrayProperty, Index);
@@ -1831,7 +1804,7 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	static void SetGenericTeamId(AActor* Target, uint8 NewTeamId);
 
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable)
-	static FLevelStreamInstanceInfo GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance);
+	static FLevelStreamInstanceInfo GetLevelInstanceInfo(ULevelStreamingDynamic* LevelInstance);
 
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
@@ -1840,18 +1813,18 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	static void RemoveFromStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
 
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (keywords="remove"))
-	static void HideStreamingLevel(ULevelStreamingKismet* LevelInstance)
+	static void HideStreamingLevel(ULevelStreamingDynamic* LevelInstance)
 	{
-		if(LevelInstance) LevelInstance->bShouldBeVisible = false;
+		if(LevelInstance) LevelInstance->SetShouldBeVisible(false);
 	}
 
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (keywords="remove"))
-	static void UnloadStreamingLevel(ULevelStreamingKismet* LevelInstance)
+	static void UnloadStreamingLevel(ULevelStreamingDynamic* LevelInstance)
 	{
-		if(LevelInstance) LevelInstance->bShouldBeLoaded = false;
+		if(LevelInstance) LevelInstance->SetShouldBeLoaded(false);
 	}
 
-	static bool GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr);
+	static bool GenericArray_SortCompare(const FProperty* LeftProperty, void* LeftValuePtr, const FProperty* RightProperty, void* RightValuePtr);
 
 	/**
 	 *	Sort the elements of an array by FString, FName, FText, float, int or boolean.
@@ -1864,14 +1837,14 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	UFUNCTION(Category = "Victory BP Library|Utilities|Array", BlueprintCallable, CustomThunk, Meta = (DisplayName = "Sort", ArrayParm = "TargetArray", AdvancedDisplay = "bAscendingOrder,VariableName"))
 	static void Array_Sort(const TArray<int32>& TargetArray, bool bAscendingOrder = true, FName VariableName = NAME_None);
 
-	static void GenericArray_Sort(void* TargetArray, const UArrayProperty* ArrayProp, bool bAscendingOrder = true, FName VariableName = NAME_None);
+	static void GenericArray_Sort(void* TargetArray, const FArrayProperty* ArrayProp, bool bAscendingOrder = true, FName VariableName = NAME_None);
 
 	DECLARE_FUNCTION(execArray_Sort)
 	{
 		Stack.MostRecentProperty = nullptr;
-		Stack.StepCompiledIn<UArrayProperty>(NULL);
+		Stack.StepCompiledIn<FArrayProperty>(NULL);
 		void* ArrayAddr = Stack.MostRecentPropertyAddress;
-		UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Stack.MostRecentProperty);
+		FArrayProperty* ArrayProperty = Cast<FArrayProperty>(Stack.MostRecentProperty);
 		if (!ArrayProperty)
 		{
 			Stack.bArrayContextFailed = true;
@@ -1880,7 +1853,7 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 
 		P_GET_UBOOL(bAscendingOrder);
 
-		P_GET_PROPERTY(UNameProperty, VariableName);
+		P_GET_PROPERTY(FNameProperty, VariableName);
 
 		P_FINISH;
 		P_NATIVE_BEGIN;

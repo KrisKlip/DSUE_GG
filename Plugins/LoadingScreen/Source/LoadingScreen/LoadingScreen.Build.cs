@@ -1,4 +1,4 @@
-// Copyright 1998-2015 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 namespace UnrealBuildTool.Rules
 {
@@ -7,7 +7,9 @@ namespace UnrealBuildTool.Rules
 		public LoadingScreen(ReadOnlyTargetRules Target)
             : base(Target)
         {
-			PrivateIncludePaths.Add("LoadingScreen/Private");
+            PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+
+            PrivateIncludePaths.Add("LoadingScreen/Private");
 
 			PublicDependencyModuleNames.AddRange(
 				new string[]
@@ -19,8 +21,7 @@ namespace UnrealBuildTool.Rules
 					"SlateCore",
 					"InputCore",
 					"Engine"
-				}
-				);
+				});
 		}
 	}
 }

@@ -8,9 +8,9 @@ public class DroneSimulator : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AdvancedSessions", "OnlineSubsystem", "OnlineSubsystemUtils", "Networking", "Sockets", "OnlineSubsystemSteam", "OnlineSubsystemNull", "MoviePlayer", "DroneControllerModule" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AdvancedSessions", "OnlineSubsystem", "OnlineSubsystemUtils", "Networking", "Sockets", "OnlineSubsystemSteam", "OnlineSubsystemNull", "MoviePlayer", "DroneControllerModule", "DeveloperSettings" });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "Sockets", "Networking", "OnlineSubsystemSteam", "OnlineSubsystemNull" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "Sockets", "Networking", "OnlineSubsystemSteam", "OnlineSubsystemNull", "DeveloperSettings" });
 
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

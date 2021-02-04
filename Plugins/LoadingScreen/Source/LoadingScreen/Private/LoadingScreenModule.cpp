@@ -1,12 +1,9 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
-#include "LoadingScreenPrivatePCH.h"
 #include "ILoadingScreenModule.h"
-
 #include "LoadingScreenSettings.h"
-#include "MoviePlayer.h"
-
 #include "SSimpleLoadingScreen.h"
+#include "Framework/Application/SlateApplication.h"
 
 #define LOCTEXT_NAMESPACE "LoadingScreen"
 
@@ -46,6 +43,7 @@ void FLoadingScreenModule::StartupModule()
 		{
 			Ref.TryLoad();
 		}
+
 		for ( const FStringAssetReference& Ref : Settings->DefaultScreen.Images )
 		{
 			Ref.TryLoad();
@@ -84,7 +82,8 @@ void FLoadingScreenModule::BeginLoadingScreen(const FLoadingScreenDescription& S
 	LoadingScreen.bMoviesAreSkippable = ScreenDescription.bMoviesAreSkippable;
 	LoadingScreen.bWaitForManualStop = ScreenDescription.bWaitForManualStop;
 	LoadingScreen.MoviePaths = ScreenDescription.MoviePaths;
-
+	LoadingScreen.PlaybackType = ScreenDescription.PlaybackType;
+	
 	if ( ScreenDescription.bShowUIOverlay )
 	{
 		LoadingScreen.WidgetLoadingScreen = SNew(SSimpleLoadingScreen, ScreenDescription);
