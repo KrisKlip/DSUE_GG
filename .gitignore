@@ -53,6 +53,8 @@ SourceArt/**/*.tga
 Binaries/*
 Plugins/*/Binaries/*
 Plugins/*/*/Binaries/*
+Plugins/*/Intermediate/*
+Plugins/*/*/Intermediate/*
 
 # Builds
 Build/*
@@ -82,3 +84,7 @@ DerivedDataCache/*
 
 Content/Barnyard_Vol3_Barn/*
 Content/QA_ModularParking/*
+Content/Neonify/*
+Content/WesterTown/*
+Content/Meadow_Environment_Set/*
+Plugins/UE4GamepadUMG/Plugins/GamepadUMGPlugin/*
