@@ -18,6 +18,7 @@
 *.so
 *.dylib
 *.dll
+*.zip
 
 # Fortran module files
 *.mod
@@ -78,3 +79,6 @@ Plugins/*/*/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+Content/Barnyard_Vol3_Barn/*
+Content/QA_ModularParking/*
